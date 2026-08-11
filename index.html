@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="Flink, Kafka, Kubernetes, PostgreSQL, Redis 공식 문서 기반 모바일 학습 카드 모음"
+    />
+    <meta name="theme-color" content="#07111f" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Tech Pocket Decks · 모바일 학습 카드</title>
+    <link rel="stylesheet" href="./home.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="site-header">
+        <div class="brand-mark" aria-hidden="true">⚡</div>
+        <div class="brand-copy">
+          <p class="eyebrow">OFFICIAL DOCS · POCKET LEARNING</p>
+          <h1>TECH POCKET DECKS</h1>
+        </div>
+        <span class="deck-total">5 DECKS</span>
+      </header>
+
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-orbit" aria-hidden="true">
+          <span class="orbit-core">480+</span>
+          <span class="orbit-dot dot-one"></span>
+          <span class="orbit-dot dot-two"></span>
+          <span class="orbit-dot dot-three"></span>
+        </div>
+        <div>
+          <p class="hero-kicker">LEARN ONE CARD AT A TIME</p>
+          <h2 id="hero-title">주머니 속<br />기술 학습 덱</h2>
+          <p class="hero-description">
+            출퇴근길에도 한 장씩. 핵심 개념부터 운영과 내부 구조까지 이어서 학습하세요.
+          </p>
+        </div>
+        <div class="hero-stats" aria-label="학습 카드 통계">
+          <span><strong>480+</strong> CARDS</span>
+          <span><strong>5</strong> TOPICS</span>
+          <span><strong>100%</strong> MOBILE</span>
+        </div>
+      </section>
+
+      <section class="deck-section" aria-labelledby="deck-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">CHOOSE YOUR TRACK</p>
+            <h2 id="deck-heading">학습할 기술</h2>
+          </div>
+          <span>총 480장+</span>
+        </div>
+
+        <div class="deck-list">
+          <a
+            class="deck-card flink"
+            href="./flink/cards/"
+            aria-label="Flink 학습 카드 225장 시작하기"
+          >
+            <span class="deck-icon" aria-hidden="true">F</span>
+            <span class="deck-content">
+              <span class="deck-topline"><strong>Apache Flink</strong><em>225 CARDS</em></span>
+              <span class="deck-description">스트림 처리 · 상태 · 체크포인트 · 운영</span>
+              <span class="deck-tags"><i>STREAM</i><i>STATE</i><i>OPS</i></span>
+            </span>
+            <span class="deck-arrow" aria-hidden="true">›</span>
+          </a>
+
+          <a
+            class="deck-card kafka"
+            href="./kafka/cards/"
+            aria-label="Kafka 학습 카드 60장 시작하기"
+          >
+            <span class="deck-icon" aria-hidden="true">K</span>
+            <span class="deck-content">
+              <span class="deck-topline"><strong>Apache Kafka</strong><em>60 CARDS</em></span>
+              <span class="deck-description">로그 · 파티션 · 컨슈머 · 분산 시스템</span>
+              <span class="deck-tags"><i>EVENT</i><i>LOG</i><i>CLUSTER</i></span>
+            </span>
+            <span class="deck-arrow" aria-hidden="true">›</span>
+          </a>
+
+          <a
+            class="deck-card kubernetes"
+            href="./kubernetes/cards/"
+            aria-label="Kubernetes 학습 카드 80장 시작하기"
+          >
+            <span class="deck-icon wide" aria-hidden="true">K8</span>
+            <span class="deck-content">
+              <span class="deck-topline"><strong>Kubernetes</strong><em>80 CARDS</em></span>
+              <span class="deck-description">워크로드 · 네트워크 · 스토리지 · 운영</span>
+              <span class="deck-tags"><i>CONTAINER</i><i>NETWORK</i><i>OPS</i></span>
+            </span>
+            <span class="deck-arrow" aria-hidden="true">›</span>
+          </a>
+
+          <a
+            class="deck-card postgresql"
+            href="./postgresql/cards/"
+            aria-label="PostgreSQL 학습 카드 80장 시작하기"
+          >
+            <span class="deck-icon" aria-hidden="true">P</span>
+            <span class="deck-content">
+              <span class="deck-topline"><strong>PostgreSQL</strong><em>80 CARDS</em></span>
+              <span class="deck-description">SQL · MVCC · 인덱스 · 내부 구조</span>
+              <span class="deck-tags"><i>SQL</i><i>DATA</i><i>INTERNAL</i></span>
+            </span>
+            <span class="deck-arrow" aria-hidden="true">›</span>
+          </a>
+
+          <a
+            class="deck-card redis"
+            href="./redis/cards/"
+            aria-label="Redis 학습 카드 40장 시작하기"
+          >
+            <span class="deck-icon" aria-hidden="true">R</span>
+            <span class="deck-content">
+              <span class="deck-topline"><strong>Redis</strong><em>40 CARDS</em></span>
+              <span class="deck-description">자료구조 · 캐시 · 영속성 · 클러스터</span>
+              <span class="deck-tags"><i>CACHE</i><i>MEMORY</i><i>CLUSTER</i></span>
+            </span>
+            <span class="deck-arrow" aria-hidden="true">›</span>
+          </a>
+        </div>
+      </section>
+
+      <footer class="site-footer">
+        <span class="save-dot" aria-hidden="true"></span>
+        <p><strong>진도는 자동 저장됩니다.</strong><br />현재 기기의 브라우저에 각 덱별로 보관돼요.</p>
+      </footer>
+    </main>
+  </body>
+</html>

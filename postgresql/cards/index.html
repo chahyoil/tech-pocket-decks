@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#071521" />
+    <meta
+      name="description"
+      content="PostgreSQL 18 공식 문서의 기초부터 내부 구조·고급 운영까지 80장의 개념과 코드로 익히는 모바일 학습 덱"
+    />
+    <title>PostgreSQL Pocket Deck · 공식 문서 학습 카드</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">P</span>
+          <span>
+            <strong>POSTGRES POCKET DECK</strong>
+            <small>PostgreSQL 18 공식 문서 기반 학습 카드</small>
+          </span>
+        </div>
+        <div class="progress" id="progress" aria-live="polite">01 / 80</div>
+      </header>
+
+      <main>
+        <section class="view active" id="view-card" aria-label="학습 카드">
+          <div class="viewer">
+            <div class="deck-status">
+              <span id="chapter-label">GETTING STARTED</span>
+              <span id="review-status">학습 0 / 80</span>
+            </div>
+
+            <div class="card-stage" id="card-stage">
+              <article class="study-card" id="study-card" tabindex="0" aria-label="카드를 눌러 뒤집기">
+                <div class="card-face card-front" id="card-front"></div>
+                <div class="card-face card-back" id="card-back"></div>
+              </article>
+            </div>
+
+            <div class="controls">
+              <button class="round-button" id="prev-button" type="button" aria-label="이전 카드">←</button>
+              <button class="shuffle-button" id="shuffle-button" type="button">
+                <span aria-hidden="true">⤨</span> 섞어서 한 장
+              </button>
+              <button class="round-button" id="next-button" type="button" aria-label="다음 카드">→</button>
+            </div>
+            <p class="keyboard-hint">← → 이동 · Space 뒤집기 · R 랜덤</p>
+          </div>
+        </section>
+
+        <section class="view" id="view-library" aria-label="카드 목록">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">CARD INDEX</span>
+              <h1>80개의 핵심·심화 개념</h1>
+            </div>
+            <div class="completion" id="completion">0 / 80 학습</div>
+          </div>
+          <div class="filters" aria-label="카드 분류">
+            <button class="filter active" type="button" data-filter="ALL">전체</button>
+            <button class="filter" type="button" data-filter="STARTER">입문</button>
+            <button class="filter" type="button" data-filter="SQL">SQL</button>
+            <button class="filter" type="button" data-filter="DATA">데이터</button>
+            <button class="filter" type="button" data-filter="TX">동시성</button>
+            <button class="filter" type="button" data-filter="INDEX">인덱스</button>
+            <button class="filter" type="button" data-filter="PROGRAM">서버 코드</button>
+            <button class="filter" type="button" data-filter="INTERNAL">내부 구조</button>
+            <button class="filter" type="button" data-filter="OPS">운영</button>
+            <button class="filter" type="button" data-filter="REVIEWED">본 카드</button>
+          </div>
+          <div class="library-grid" id="library-grid"></div>
+        </section>
+
+        <section class="view" id="view-path" aria-label="학습 순서">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">LEARNING PATH</span>
+              <h1>문서에서 실전으로</h1>
+            </div>
+            <div class="completion">기초부터 내부 구조까지 · 80장</div>
+          </div>
+          <div class="path-list" id="path-list"></div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="주 화면">
+        <button class="tab active" type="button" data-view="card">
+          <span aria-hidden="true">▣</span> 카드
+        </button>
+        <button class="tab" type="button" data-view="library">
+          <span aria-hidden="true">▦</span> 목록
+        </button>
+        <button class="tab" type="button" data-view="path">
+          <span aria-hidden="true">⌁</span> 순서
+        </button>
+      </nav>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="js/cards.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
