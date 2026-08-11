@@ -61,24 +61,24 @@ CREATE TABLE billing.invoices (
 SET search_path TO billing, public;`,
   }),
   pgCard("STARTER-004", "STARTER", "GETTING STARTED", "PRACTICE", "PSQL TOOLBELT", "psql 기본 도구", {
-    snippet: `\l        databases
-\c app    connect
-\dt       tables
-\d users  describe
-\x auto   expanded`, icon: "CLI", attrs: ["psql", "Meta Command"], atk: "빠른 탐색", def: "세미콜론 구분",
+    snippet: `\\l        databases
+\\c app    connect
+\\dt       tables
+\\d users  describe
+\\x auto   expanded`, icon: "CLI", attrs: ["psql", "Meta Command"], atk: "빠른 탐색", def: "세미콜론 구분",
     effect: "psql은 SQL 실행뿐 아니라 데이터베이스·테이블 탐색, 파일 실행, 결과 형식 전환을 제공하는 기본 CLI다.",
     flavor: "관리 화면보다 먼저 익혀둘 데이터베이스 셸.",
-    detail: "역슬래시로 시작하는 psql 메타 명령은 서버로 보내는 SQL이 아니라 클라이언트가 처리한다. SQL 문은 세미콜론으로 끝나며 \i로 파일을 실행하고 \timing으로 실행 시간을 볼 수 있다. 자동화에는 사람이 읽는 표보다 오류 처리와 종료 코드가 중요하므로 ON_ERROR_STOP을 켜는 습관이 유용하다.",
-    code: `\l
-\c app_db
-\dn
-\dt billing.*
-\d+ billing.invoices
-\timing on
+    detail: "역슬래시로 시작하는 psql 메타 명령은 서버로 보내는 SQL이 아니라 클라이언트가 처리한다. SQL 문은 세미콜론으로 끝나며 \\i로 파일을 실행하고 \\timing으로 실행 시간을 볼 수 있다. 자동화에는 사람이 읽는 표보다 오류 처리와 종료 코드가 중요하므로 ON_ERROR_STOP을 켜는 습관이 유용하다.",
+    code: `\\l
+\\c app_db
+\\dn
+\\dt billing.*
+\\d+ billing.invoices
+\\timing on
 
 -- 스크립트에서 첫 오류에 중단
-\set ON_ERROR_STOP on
-\i migrations/001_init.sql`, lang: "psql",
+\\set ON_ERROR_STOP on
+\\i migrations/001_init.sql`, lang: "psql",
   }),
   pgCard("STARTER-005", "STARTER", "GETTING STARTED", "PRACTICE", "CREATE TABLE", "테이블과 제약조건", {
     visual: "table", icon: "DDL", attrs: ["DDL", "Constraint"], atk: "열 이름 + 타입", def: "데이터 규칙",
@@ -472,12 +472,12 @@ serial order possible?
     detail: "PostgreSQL은 Serializable Snapshot Isolation로 읽기/쓰기 의존성을 추적해 직렬화 이상을 감지한다. 단순히 모든 작업을 순서대로 잠그는 방식은 아니므로 동시성은 유지되지만 SQLSTATE 40001이 발생할 수 있다. 재시도는 마지막 문장이 아니라 트랜잭션 전체를 새 스냅샷에서 다시 실행해야 하며 부수 효과는 커밋 뒤에 수행한다.",
     code: `BEGIN ISOLATION LEVEL SERIALIZABLE;
 
-SELECT sum(amount) INTO ...
-FROM ledger
-WHERE account_id = 42;
-
 INSERT INTO audit_summary(account_id, total)
-VALUES (42, ...);
+SELECT 42, coalesce(sum(amount), 0)
+FROM ledger
+WHERE account_id = 42
+ON CONFLICT (account_id)
+DO UPDATE SET total = EXCLUDED.total;
 
 COMMIT;
 -- could not serialize access (40001) → 전체 재시도`,
@@ -567,7 +567,7 @@ ANALYZE orders;`,
   }),
   pgCard("INDEX-030", "INDEX", "INDEXES", "CORE", "B-TREE", "B-tree 인덱스", {
     snippet: `          [50]
-       /        \
+       /        \\
    [10..40]   [60..90]
 
 =  <  <=  >=  >  ORDER BY`, icon: "BT", attrs: ["B-tree", "Range"], atk: "동등·범위·정렬", def: "쓰기마다 유지 비용",
@@ -897,14 +897,14 @@ WHEN NOT MATCHED THEN
      ⇅ COPY
  PostgreSQL table
 
-\copy = client-side file`, icon: "COPY", attrs: ["Bulk", "CSV"], atk: "고속 대량 적재", def: "검증·오류 처리 설계",
+\\copy = client-side file`, icon: "COPY", attrs: ["Bulk", "CSV"], atk: "고속 대량 적재", def: "검증·오류 처리 설계",
     effect: "COPY는 테이블과 파일 또는 표준 입출력 사이에서 행을 스트리밍해 반복 INSERT보다 효율적으로 대량 데이터를 이동한다.",
     flavor: "한 행씩 왕복하지 말고 데이터 흐름을 연다.",
-    detail: "서버 COPY의 파일 경로는 DB 서버 기준이며 권한이 필요하고 psql의 \copy는 클라이언트 파일을 STDIN/STDOUT으로 전달한다. CSV 옵션, NULL 표현, 인코딩을 명시하고 staging 테이블에 먼저 적재한 뒤 검증·변환·병합하는 패턴이 안전하다. COPY도 트랜잭션 안에서 실행할 수 있다.",
+    detail: "서버 COPY의 파일 경로는 DB 서버 기준이며 권한이 필요하고 psql의 \\copy는 클라이언트 파일을 STDIN/STDOUT으로 전달한다. CSV 옵션, NULL 표현, 인코딩을 명시하고 staging 테이블에 먼저 적재한 뒤 검증·변환·병합하는 패턴이 안전하다. COPY도 트랜잭션 안에서 실행할 수 있다.",
     code: `CREATE TEMP TABLE staging_orders
 (LIKE orders INCLUDING DEFAULTS);
 
-\copy staging_orders(customer_id,total_amount,ordered_at)
+\\copy staging_orders(customer_id,total_amount,ordered_at)
 FROM 'orders.csv'
 WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
 
@@ -1286,7 +1286,11 @@ WHERE o.ordered_at >= current_date - 7;
 
 -- 진단 실험용일 뿐 운영 해법으로 고정하지 않는다
 SET LOCAL enable_hashjoin = off;
-EXPLAIN ANALYZE SELECT ...;`,
+EXPLAIN ANALYZE
+SELECT o.order_id, c.segment
+FROM orders o
+JOIN customers c ON c.customer_id = o.customer_id
+WHERE o.ordered_at >= current_date - 7;`,
   }),
   pgCard("INTERNAL-065", "INTERNAL", "QUERY EXECUTION", "INTERNAL", "PARALLEL QUERY", "병렬 쿼리", {
     snippet: `leader
