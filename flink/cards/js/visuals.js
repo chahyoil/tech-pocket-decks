@@ -1150,4 +1150,511 @@ window.FLINK_VISUALS = {
   <text x="140" y="48" text-anchor="middle" fill="#fff" font-size="12" font-family="sans-serif">WAR ROOM</text>
   <text x="140" y="66" text-anchor="middle" fill="#ffcdd2" font-size="9" font-family="sans-serif">impact → metrics → action</text>
 </svg>`,
+
+  planner: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="15" y="35" width="55" height="30" rx="4" fill="#455a64"/><text x="42" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">SQL</text>
+  <path d="M70 50 H90" stroke="#ff8a50" stroke-width="2"/>
+  <rect x="95" y="35" width="55" height="30" rx="4" fill="#1565c0"/><text x="122" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">logical</text>
+  <path d="M150 50 H170" stroke="#ff8a50" stroke-width="2"/>
+  <rect x="175" y="35" width="55" height="30" rx="4" fill="#e65100"/><text x="202" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">physical</text>
+  <path d="M230 50 H245" stroke="#ff8a50" stroke-width="2"/>
+  <text x="255" y="54" fill="#8b9bb8" font-size="9" font-family="sans-serif">run</text>
+</svg>`,
+
+  pushdown: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="40" y="15" width="80" height="25" rx="4" fill="#455a64"/><text x="80" y="32" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">filter late</text>
+  <path d="M80 45 V65" stroke="#ff8a50" stroke-width="2"/>
+  <rect x="40" y="65" width="80" height="25" rx="4" fill="#2e7d32"/><text x="80" y="82" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">filter early</text>
+  <rect x="160" y="30" width="90" height="40" rx="6" fill="#1565c0"/><text x="205" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">source</text>
+</svg>`,
+
+  proj: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="30" y="25" width="100" height="50" rx="4" fill="#37474f"/>
+  <rect x="40" y="35" width="15" height="30" fill="#42a5f5"/><rect x="60" y="35" width="15" height="30" fill="#455a64"/><rect x="80" y="35" width="15" height="30" fill="#42a5f5"/><rect x="100" y="35" width="15" height="30" fill="#455a64"/>
+  <path d="M140 50 H170" stroke="#ff8a50" stroke-width="2"/>
+  <rect x="175" y="30" width="70" height="40" rx="4" fill="#e65100"/><text x="210" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">cols</text>
+</svg>`,
+
+  exchange2: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="20" y="20" width="40" height="20" fill="#1565c0"/><rect x="20" y="50" width="40" height="20" fill="#1565c0"/>
+  <path d="M65 30 L120 40 M65 60 L120 50" stroke="#ff8a50" fill="none" stroke-width="1.5"/>
+  <rect x="125" y="25" width="90" height="50" rx="6" fill="#6a1b9a"/><text x="170" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">Exchange</text>
+  <path d="M220 40 L250 30 M220 50 L250 60" stroke="#ff8a50" fill="none" stroke-width="1.5"/>
+</svg>`,
+
+  sqltll: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="50" y="25" width="180" height="50" rx="8" fill="#0d1117" stroke="#30363d"/>
+  <text x="70" y="55" fill="#a5d6ff" font-size="11" font-family="ui-monospace,monospace">table.exec.state.ttl</text>
+</svg>`,
+
+  distinct: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <circle cx="60" cy="50" r="10" fill="#90caf9"/><circle cx="85" cy="50" r="10" fill="#90caf9"/><circle cx="110" cy="50" r="10" fill="#42a5f5"/>
+  <text x="160" y="45" fill="#ffcc80" font-size="11" font-family="sans-serif">COUNT</text>
+  <text x="160" y="62" fill="#ff8a50" font-size="11" font-family="sans-serif">DISTINCT</text>
+</svg>`,
+
+  hint: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="40" y="25" width="200" height="50" rx="8" fill="#0d1117" stroke="#ff8a50"/>
+  <text x="60" y="55" fill="#ffcc80" font-size="12" font-family="ui-monospace,monospace">/*+ BROADCAST(d) */</text>
+</svg>`,
+
+  cumulate: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="40" y="55" width="40" height="20" fill="#1565c0"/>
+  <rect x="90" y="40" width="50" height="35" fill="#1e88e5"/>
+  <rect x="150" y="25" width="60" height="50" fill="#42a5f5"/>
+  <text x="140" y="90" text-anchor="middle" fill="#8b9bb8" font-size="8" font-family="sans-serif">cumulate grows</text>
+</svg>`,
+
+  overagg: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <circle cx="50" cy="50" r="6" fill="#42a5f5"/><circle cx="80" cy="50" r="6" fill="#42a5f5"/><circle cx="110" cy="50" r="6" fill="#42a5f5"/><circle cx="140" cy="50" r="6" fill="#ff8a50"/>
+  <path d="M50 70 H140" stroke="#ffcc80" stroke-width="2"/>
+  <text x="200" y="54" fill="#cfd8dc" font-size="10" font-family="sans-serif">OVER frame</text>
+</svg>`,
+
+  materialize: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="30" y="30" width="70" height="40" rx="4" fill="#1565c0"/><text x="65" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">changelog</text>
+  <rect x="120" y="25" width="60" height="50" rx="4" fill="#e65100"/><text x="150" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">buffer</text>
+  <rect x="200" y="30" width="55" height="40" rx="4" fill="#2e7d32"/><text x="227" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">sink</text>
+</svg>`,
+
+  tz: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <circle cx="90" cy="50" r="28" fill="none" stroke="#ff8a50" stroke-width="3"/>
+  <text x="90" y="54" text-anchor="middle" fill="#ffcc80" font-size="10" font-family="sans-serif">UTC</text>
+  <text x="180" y="45" fill="#cfd8dc" font-size="10" font-family="sans-serif">Asia/Seoul</text>
+  <text x="180" y="62" fill="#8b9bb8" font-size="9" font-family="sans-serif">window borders</text>
+</svg>`,
+
+  wmdll: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="25" y="25" width="230" height="50" rx="8" fill="#0d1117" stroke="#30363d"/>
+  <text x="40" y="55" fill="#ff7b72" font-size="11" font-family="ui-monospace,monospace">WATERMARK FOR ts AS ...</text>
+</svg>`,
+
+  computed: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="40" y="30" width="90" height="40" rx="4" fill="#455a64"/><text x="85" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">payload</text>
+  <path d="M135 50 H165" stroke="#ff8a50" stroke-width="2"/>
+  <rect x="170" y="30" width="70" height="40" rx="4" fill="#e65100"/><text x="205" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">AS col</text>
+</svg>`,
+
+  metacols: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="30" y="25" width="80" height="50" rx="4" fill="#4a148c"/><text x="70" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">value</text>
+  <rect x="130" y="25" width="50" height="50" rx="4" fill="#e65100"/><text x="155" y="48" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">part</text><text x="155" y="62" text-anchor="middle" fill="#ffcc80" font-size="8" font-family="sans-serif">off</text>
+  <rect x="200" y="25" width="50" height="50" rx="4" fill="#e65100"/><text x="225" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">ts</text>
+</svg>`,
+
+  sqlclient: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="30" y="20" width="220" height="60" rx="8" fill="#0d1117" stroke="#30363d"/>
+  <text x="48" y="48" fill="#66bb6a" font-size="12" font-family="ui-monospace,monospace">Flink SQL&gt;</text>
+  <text x="48" y="68" fill="#8b949e" font-size="11" font-family="ui-monospace,monospace">EXPLAIN ...</text>
+</svg>`,
+
+  stmtset: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="30" y="30" width="50" height="40" rx="4" fill="#1565c0"/><text x="55" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">src</text>
+  <path d="M85 40 H120" stroke="#ff8a50"/><path d="M85 60 H120" stroke="#ff8a50"/>
+  <rect x="125" y="20" width="55" height="25" rx="3" fill="#2e7d32"/><text x="152" y="37" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">sinkA</text>
+  <rect x="125" y="55" width="55" height="25" rx="3" fill="#2e7d32"/><text x="152" y="72" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">sinkB</text>
+  <text x="210" y="54" fill="#ffcc80" font-size="9" font-family="sans-serif">1 job</text>
+</svg>`,
+
+  dynopt: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="30" y="30" width="220" height="40" rx="6" fill="#0d1117" stroke="#ff8a50"/>
+  <text x="45" y="55" fill="#ffcc80" font-size="10" font-family="ui-monospace,monospace">/*+ OPTIONS('scan...') */</text>
+</svg>`,
+
+  udfdll: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="40" y="30" width="200" height="40" rx="6" fill="#0d1117" stroke="#30363d"/>
+  <text x="55" y="55" fill="#d2a8ff" font-size="11" font-family="ui-monospace,monospace">CREATE FUNCTION</text>
+</svg>`,
+
+  catalog: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="40" y="20" width="200" height="20" rx="3" fill="#e65100"/><text x="140" y="34" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">catalog</text>
+  <rect x="55" y="45" width="170" height="18" rx="3" fill="#ef6c00"/><text x="140" y="58" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">database</text>
+  <rect x="70" y="68" width="140" height="18" rx="3" fill="#ff8f00"/><text x="140" y="81" text-anchor="middle" fill="#000" font-size="8" font-family="sans-serif">table</text>
+</svg>`,
+
+  sqlpar: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="50" y="30" width="180" height="40" rx="6" fill="#1a237e" stroke="#7986cb"/>
+  <text x="140" y="54" text-anchor="middle" fill="#c5cae9" font-size="11" font-family="sans-serif">parallelism.default = N</text>
+</svg>`,
+
+  fusion: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="30" y="35" width="40" height="30" rx="3" fill="#6a1b9a"/>
+  <rect x="80" y="35" width="40" height="30" rx="3" fill="#6a1b9a"/>
+  <rect x="130" y="35" width="40" height="30" rx="3" fill="#6a1b9a"/>
+  <path d="M175 50 H200" stroke="#ff8a50" stroke-width="2"/>
+  <rect x="205" y="25" width="55" height="50" rx="6" fill="#e65100"/><text x="232" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">fused</text>
+</svg>`,
+
+  kstart: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <line x1="30" y1="50" x2="250" y2="50" stroke="#455a64" stroke-width="3"/>
+  <circle cx="60" cy="50" r="8" fill="#66bb6a"/><text x="60" y="75" text-anchor="middle" fill="#a5d6a7" font-size="8" font-family="sans-serif">earliest</text>
+  <circle cx="140" cy="50" r="8" fill="#ff8a50"/><text x="140" y="75" text-anchor="middle" fill="#ffcc80" font-size="8" font-family="sans-serif">timestamp</text>
+  <circle cx="220" cy="50" r="8" fill="#42a5f5"/><text x="220" y="75" text-anchor="middle" fill="#90caf9" font-size="8" font-family="sans-serif">latest</text>
+</svg>`,
+
+  kpart: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="30" y="25" width="30" height="50" fill="#4a148c"/><rect x="70" y="25" width="30" height="50" fill="#4a148c"/><rect x="110" y="25" width="30" height="50" fill="#4a148c"/><rect x="150" y="25" width="30" height="50" fill="#4a148c"/>
+  <text x="210" y="45" fill="#cfd8dc" font-size="9" font-family="sans-serif">partitions</text>
+  <text x="210" y="62" fill="#ffcc80" font-size="9" font-family="sans-serif">≈ source p</text>
+</svg>`,
+
+  desererr: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="40" y="30" width="90" height="40" rx="4" fill="#c62828"/><text x="85" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">bad JSON</text>
+  <path d="M140 50 H175" stroke="#ff8a50" stroke-width="2"/>
+  <rect x="180" y="30" width="70" height="40" rx="4" fill="#e65100"/><text x="215" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">DLQ</text>
+</svg>`,
+
+  acks: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="40" y="30" width="70" height="40" rx="4" fill="#e65100"/><text x="75" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">produce</text>
+  <path d="M115 50 H150" stroke="#ff8a50" stroke-width="2"/>
+  <rect x="155" y="20" width="90" height="60" rx="4" fill="#2e7d32"/><text x="200" y="48" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">acks=all</text><text x="200" y="64" text-anchor="middle" fill="#a5d6a7" font-size="8" font-family="sans-serif">ISR</text>
+</svg>`,
+
+  klag: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="40" y="60" width="30" height="20" fill="#42a5f5"/>
+  <rect x="90" y="40" width="30" height="40" fill="#ff8a50"/>
+  <rect x="140" y="20" width="30" height="60" fill="#ef5350"/>
+  <rect x="190" y="45" width="30" height="35" fill="#42a5f5"/>
+  <text x="140" y="95" text-anchor="middle" fill="#ef9a9a" font-size="9" font-family="sans-serif">consumer lag</text>
+</svg>`,
+
+  rebalance: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <circle cx="70" cy="50" r="20" fill="#455a64"/><text x="70" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">TM</text>
+  <path d="M95 40 C130 10 160 10 195 40" stroke="#ff8a50" fill="none"/>
+  <path d="M95 60 C130 90 160 90 195 60" stroke="#ff8a50" fill="none"/>
+  <circle cx="210" cy="50" r="20" fill="#e65100"/><text x="210" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">TM</text>
+</svg>`,
+
+  schemareg: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="50" y="20" width="180" height="60" rx="8" fill="#1a237e" stroke="#7986cb"/>
+  <text x="140" y="48" text-anchor="middle" fill="#c5cae9" font-size="11" font-family="sans-serif">Schema Registry</text>
+  <text x="140" y="66" text-anchor="middle" fill="#9fa8da" font-size="9" font-family="sans-serif">id · compatibility</text>
+</svg>`,
+
+  idemp: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <circle cx="90" cy="50" r="16" fill="#42a5f5"/><text x="90" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">msg</text>
+  <circle cx="140" cy="50" r="16" fill="#42a5f5" opacity=".4"/><text x="140" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">dup</text>
+  <path d="M165 50 H195" stroke="#66bb6a" stroke-width="2"/>
+  <rect x="200" y="35" width="50" height="30" rx="4" fill="#2e7d32"/><text x="225" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">1x</text>
+</svg>`,
+
+  mtopic: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="20" y="20" width="60" height="20" rx="3" fill="#4a148c"/>
+  <rect x="20" y="50" width="60" height="20" rx="3" fill="#4a148c"/>
+  <path d="M85 30 H120 L150 50 M85 60 H120 L150 50" stroke="#ff8a50" fill="none"/>
+  <rect x="155" y="30" width="90" height="40" rx="6" fill="#e65100"/><text x="200" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">Flink src</text>
+</svg>`,
+
+  ratelimit: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <path d="M40 50 H110" stroke="#42a5f5" stroke-width="6"/>
+  <rect x="120" y="30" width="40" height="40" rx="4" fill="#ff8a50"/><text x="140" y="54" text-anchor="middle" fill="#000" font-size="8" font-family="sans-serif">valve</text>
+  <path d="M165 50 H240" stroke="#42a5f5" stroke-width="2"/>
+</svg>`,
+
+  cdcsnap: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="30" y="30" width="80" height="40" rx="4" fill="#1565c0"/><text x="70" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">snapshot</text>
+  <path d="M120 50 H160" stroke="#ff8a50" stroke-width="2"/>
+  <rect x="165" y="30" width="80" height="40" rx="4" fill="#e65100"/><text x="205" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">binlog</text>
+</svg>`,
+
+  cdcddl: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="40" y="25" width="90" height="50" rx="4" fill="#455a64"/><text x="85" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">table v1</text>
+  <path d="M140 50 H170" stroke="#ef5350" stroke-width="2"/>
+  <rect x="175" y="25" width="70" height="50" rx="4" fill="#c62828"/><text x="210" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">ALTER</text>
+</svg>`,
+
+  debezium: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="40" y="20" width="200" height="60" rx="8" fill="#0d1117" stroke="#30363d"/>
+  <text x="60" y="45" fill="#ff7b72" font-size="11" font-family="ui-monospace,monospace">op before after</text>
+  <text x="60" y="65" fill="#8b949e" font-size="10" font-family="ui-monospace,monospace">debezium envelope</text>
+</svg>`,
+
+  cdcsink: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="25" y="30" width="55" height="40" rx="4" fill="#0d47a1"/><text x="52" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">CDC</text>
+  <path d="M85 50 H120" stroke="#ff8a50" stroke-width="2"/>
+  <rect x="125" y="30" width="55" height="40" rx="4" fill="#e65100"/><text x="152" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">Flink</text>
+  <path d="M185 50 H215" stroke="#ff8a50" stroke-width="2"/>
+  <rect x="220" y="30" width="40" height="40" rx="4" fill="#2e7d32"/><text x="240" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">PK</text>
+</svg>`,
+
+  binpos: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="40" y="25" width="200" height="50" rx="6" fill="#37474f"/>
+  <text x="140" y="48" text-anchor="middle" fill="#fff" font-size="10" font-family="sans-serif">binlog.000123</text>
+  <text x="140" y="64" text-anchor="middle" fill="#ffcc80" font-size="9" font-family="sans-serif">pos = 456789</text>
+</svg>`,
+
+  multicdc: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="25" y="20" width="50" height="18" rx="2" fill="#1565c0"/>
+  <rect x="25" y="42" width="50" height="18" rx="2" fill="#1565c0"/>
+  <rect x="25" y="64" width="50" height="18" rx="2" fill="#1565c0"/>
+  <path d="M80 50 H130" stroke="#ff8a50" stroke-width="2"/>
+  <rect x="135" y="30" width="110" height="40" rx="6" fill="#e65100"/><text x="190" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">CDC job</text>
+</svg>`,
+
+  tztrap: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <text x="70" y="40" text-anchor="middle" fill="#90caf9" font-size="10" font-family="sans-serif">DB TZ</text>
+  <text x="140" y="40" text-anchor="middle" fill="#ffcc80" font-size="10" font-family="sans-serif">JDBC</text>
+  <text x="210" y="40" text-anchor="middle" fill="#ef9a9a" font-size="10" font-family="sans-serif">Flink</text>
+  <text x="140" y="70" text-anchor="middle" fill="#ef5350" font-size="12" font-family="sans-serif">≠ mismatch</text>
+</svg>`,
+
+  lake: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <ellipse cx="140" cy="55" rx="100" ry="30" fill="#0d47a1" opacity=".7"/>
+  <rect x="90" y="25" width="100" height="25" rx="4" fill="#e65100"/><text x="140" y="42" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">table format</text>
+</svg>`,
+
+  iceberg: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <polygon points="140,15 200,80 80,80" fill="#b3e5fc" stroke="#4fc3f7"/>
+  <text x="140" y="70" text-anchor="middle" fill="#0277bd" font-size="11" font-family="sans-serif">Iceberg</text>
+</svg>`,
+
+  iceupsert: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="40" y="30" width="70" height="40" rx="4" fill="#e65100"/><text x="75" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">CDC</text>
+  <path d="M120 50 H160" stroke="#ff8a50" stroke-width="2"/>
+  <rect x="165" y="25" width="90" height="50" rx="6" fill="#0277bd"/><text x="210" y="48" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">Iceberg</text><text x="210" y="64" text-anchor="middle" fill="#b3e5fc" font-size="8" font-family="sans-serif">eq-delete</text>
+</svg>`,
+
+  paimon: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="50" y="20" width="180" height="60" rx="8" fill="#1b5e20" stroke="#66bb6a"/>
+  <text x="140" y="48" text-anchor="middle" fill="#c8e6c9" font-size="14" font-family="sans-serif">Paimon</text>
+  <text x="140" y="66" text-anchor="middle" fill="#a5d6a7" font-size="9" font-family="sans-serif">PK table · buckets</text>
+</svg>`,
+
+  bucket: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="30" y="30" width="40" height="45" rx="4" fill="#6a1b9a"/><rect x="85" y="30" width="40" height="45" rx="4" fill="#6a1b9a"/><rect x="140" y="30" width="40" height="45" rx="4" fill="#e65100"/><rect x="195" y="30" width="40" height="45" rx="4" fill="#6a1b9a"/>
+  <text x="140" y="90" text-anchor="middle" fill="#8b9bb8" font-size="8" font-family="sans-serif">buckets</text>
+</svg>`,
+
+  smallfiles: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="40" y="40" width="12" height="20" fill="#ef5350"/><rect x="58" y="45" width="10" height="15" fill="#ef5350"/><rect x="74" y="38" width="14" height="22" fill="#ef5350"/><rect x="94" y="42" width="11" height="18" fill="#ef5350"/><rect x="112" y="40" width="13" height="20" fill="#ef5350"/>
+  <path d="M140 50 H175" stroke="#ff8a50" stroke-width="2"/>
+  <rect x="185" y="30" width="55" height="40" rx="4" fill="#2e7d32"/><text x="212" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">compact</text>
+</svg>`,
+
+  snapexp: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="40" y="30" width="40" height="40" rx="3" fill="#455a64" opacity=".4"/>
+  <rect x="95" y="30" width="40" height="40" rx="3" fill="#455a64" opacity=".7"/>
+  <rect x="150" y="30" width="40" height="40" rx="3" fill="#e65100"/>
+  <text x="220" y="54" fill="#8b9bb8" font-size="9" font-family="sans-serif">expire</text>
+</svg>`,
+
+  multiengine: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="30" y="35" width="55" height="30" rx="4" fill="#e65100"/><text x="57" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">Flink</text>
+  <rect x="110" y="25" width="60" height="50" rx="4" fill="#1565c0"/><text x="140" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">Table</text>
+  <rect x="195" y="35" width="55" height="30" rx="4" fill="#6a1b9a"/><text x="222" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">Spark</text>
+</svg>`,
+
+  partevo: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="40" y="30" width="80" height="40" rx="4" fill="#455a64"/><text x="80" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">part by day</text>
+  <path d="M130 50 H160" stroke="#ff8a50" stroke-width="2"/>
+  <rect x="165" y="30" width="85" height="40" rx="4" fill="#e65100"/><text x="207" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">+ hour</text>
+</svg>`,
+
+  lakecp: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="30" y="30" width="70" height="40" rx="4" fill="#e65100"/><text x="65" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">CP ok</text>
+  <path d="M110 50 H150" stroke="#66bb6a" stroke-width="2"/>
+  <rect x="155" y="30" width="95" height="40" rx="4" fill="#1b5e20"/><text x="202" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">lake commit</text>
+</svg>`,
+
+  tswm: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <line x1="40" y1="70" x2="240" y2="70" stroke="#455a64"/>
+  <line x1="40" y1="40" x2="200" y2="40" stroke="#ef5350" stroke-width="3"/>
+  <text x="140" y="30" text-anchor="middle" fill="#ef9a9a" font-size="10" font-family="sans-serif">watermark stuck</text>
+</svg>`,
+
+  tscp: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="50" y="25" width="180" height="50" rx="8" fill="#b71c1c"/>
+  <text x="140" y="48" text-anchor="middle" fill="#fff" font-size="11" font-family="sans-serif">CHECKPOINT FAIL</text>
+  <text x="140" y="64" text-anchor="middle" fill="#ffcdd2" font-size="9" font-family="sans-serif">loop</text>
+</svg>`,
+
+  stateboom: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="60" y="55" width="40" height="20" fill="#42a5f5"/>
+  <rect x="110" y="35" width="50" height="40" fill="#ff8a50"/>
+  <rect x="170" y="15" width="60" height="60" fill="#ef5350"/>
+  <text x="140" y="95" text-anchor="middle" fill="#ef9a9a" font-size="8" font-family="sans-serif">state size</text>
+</svg>`,
+
+  dbstorm: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="30" y="30" width="60" height="40" rx="4" fill="#e65100"/><text x="60" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">Flink</text>
+  <path d="M95 40 H140" stroke="#ef5350" stroke-width="3"/><path d="M95 50 H140" stroke="#ef5350" stroke-width="3"/><path d="M95 60 H140" stroke="#ef5350" stroke-width="3"/>
+  <rect x="150" y="25" width="100" height="50" rx="6" fill="#c62828"/><text x="200" y="54" text-anchor="middle" fill="#fff" font-size="10" font-family="sans-serif">DB 🔥</text>
+</svg>`,
+
+  restorm: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <path d="M80 30 A30 30 0 1 1 70 70" fill="none" stroke="#ef5350" stroke-width="4"/>
+  <polygon points="68,65 60,80 80,72" fill="#ef5350"/>
+  <text x="170" y="54" fill="#ef9a9a" font-size="11" font-family="sans-serif">restart storm</text>
+</svg>`,
+
+  sprestore: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="30" y="30" width="70" height="40" rx="4" fill="#1565c0"/><text x="65" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">savepoint</text>
+  <path d="M110 50 H150" stroke="#ef5350" stroke-width="2"/>
+  <rect x="155" y="30" width="90" height="40" rx="4" fill="#c62828"/><text x="200" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">uid fail</text>
+</svg>`,
+
+  latespike: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <path d="M40 70 L100 65 L140 20 L180 60 L240 55" fill="none" stroke="#ef5350" stroke-width="3"/>
+  <text x="140" y="90" text-anchor="middle" fill="#ef9a9a" font-size="9" font-family="sans-serif">late event spike</text>
+</svg>`,
+
+  sqldup: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="40" y="25" width="80" height="25" rx="3" fill="#42a5f5"/><text x="80" y="42" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">agg v1</text>
+  <rect x="40" y="55" width="80" height="25" rx="3" fill="#42a5f5"/><text x="80" y="72" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">agg v2</text>
+  <text x="180" y="54" fill="#ef9a9a" font-size="10" font-family="sans-serif">append sink = dup</text>
+</svg>`,
+
+  slowcp: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="40" y="35" width="200" height="30" rx="4" fill="#37474f"/>
+  <rect x="40" y="35" width="50" height="30" rx="4" fill="#ff8a50"/>
+  <text x="140" y="80" text-anchor="middle" fill="#8b9bb8" font-size="9" font-family="sans-serif">CP duration long</text>
+</svg>`,
+
+  oom: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="60" y="20" width="160" height="60" rx="8" fill="#b71c1c"/>
+  <text x="140" y="55" text-anchor="middle" fill="#fff" font-size="16" font-family="sans-serif">OOM</text>
+</svg>`,
+
+  clockskew: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <circle cx="80" cy="50" r="25" fill="none" stroke="#42a5f5" stroke-width="2"/>
+  <circle cx="180" cy="50" r="25" fill="none" stroke="#ef5350" stroke-width="2"/>
+  <text x="80" y="54" text-anchor="middle" fill="#90caf9" font-size="9" font-family="sans-serif">now</text>
+  <text x="180" y="54" text-anchor="middle" fill="#ef9a9a" font-size="9" font-family="sans-serif">future</text>
+</svg>`,
+
+  cdclag: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="40" y="30" width="70" height="40" rx="4" fill="#0d47a1"/><text x="75" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">DB</text>
+  <path d="M120 50 H170" stroke="#ef5350" stroke-width="3" stroke-dasharray="6 3"/>
+  <rect x="175" y="30" width="70" height="40" rx="4" fill="#e65100"/><text x="210" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">lag</text>
+</svg>`,
+
+  compactlag: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="30" y="40" width="20" height="25" fill="#ef5350"/><rect x="55" y="35" width="20" height="30" fill="#ef5350"/><rect x="80" y="30" width="20" height="35" fill="#ef5350"/>
+  <text x="180" y="54" fill="#ffcc80" font-size="10" font-family="sans-serif">compaction lag</text>
+</svg>`,
+
+  joinskeew: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="50" y="50" width="30" height="25" fill="#42a5f5"/>
+  <rect x="100" y="30" width="30" height="45" fill="#42a5f5"/>
+  <rect x="150" y="10" width="40" height="65" fill="#ef5350"/>
+  <text x="170" y="90" text-anchor="middle" fill="#ef9a9a" font-size="8" font-family="sans-serif">join state skew</text>
+</svg>`,
+
+  jsoncpu: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="40" y="25" width="200" height="50" rx="8" fill="#0d1117" stroke="#ef5350"/>
+  <text x="140" y="55" text-anchor="middle" fill="#ef9a9a" font-size="12" font-family="ui-monospace,monospace">{ ... } CPU</text>
+</svg>`,
+
+  timeattr: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="30" y="30" width="90" height="40" rx="4" fill="#c62828"/><text x="75" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">proctime</text>
+  <rect x="160" y="30" width="90" height="40" rx="4" fill="#2e7d32"/><text x="205" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">event time</text>
+</svg>`,
+
+  vermis: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="40" y="30" width="70" height="40" rx="4" fill="#1565c0"/><text x="75" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">Flink a.b</text>
+  <text x="140" y="54" fill="#ef5350" font-size="16" font-family="sans-serif">≠</text>
+  <rect x="170" y="30" width="80" height="40" rx="4" fill="#c62828"/><text x="210" y="54" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif">conn x.y</text>
+</svg>`,
+
+  dataloss: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <circle cx="70" cy="50" r="12" fill="#42a5f5"/><circle cx="110" cy="50" r="12" fill="#42a5f5"/><circle cx="150" cy="50" r="12" fill="none" stroke="#ef5350" stroke-width="2" stroke-dasharray="3 2"/>
+  <circle cx="190" cy="50" r="12" fill="#42a5f5"/>
+  <text x="140" y="85" text-anchor="middle" fill="#ef9a9a" font-size="9" font-family="sans-serif">missing record</text>
+</svg>`,
+
+  joinmatrix: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="15" y="25" width="50" height="50" rx="4" fill="#1565c0"/><text x="40" y="54" text-anchor="middle" fill="#fff" font-size="7" font-family="sans-serif">lookup</text>
+  <rect x="75" y="25" width="50" height="50" rx="4" fill="#6a1b9a"/><text x="100" y="54" text-anchor="middle" fill="#fff" font-size="7" font-family="sans-serif">temporal</text>
+  <rect x="135" y="25" width="50" height="50" rx="4" fill="#e65100"/><text x="160" y="54" text-anchor="middle" fill="#fff" font-size="7" font-family="sans-serif">interval</text>
+  <rect x="195" y="25" width="60" height="50" rx="4" fill="#c62828"/><text x="225" y="54" text-anchor="middle" fill="#fff" font-size="7" font-family="sans-serif">regular!</text>
+</svg>`,
+
+  cdcord: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="40" y="25" width="50" height="25" rx="3" fill="#66bb6a"/><text x="65" y="42" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">v2</text>
+  <rect x="40" y="55" width="50" height="25" rx="3" fill="#ef5350"/><text x="65" y="72" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">v1 late</text>
+  <text x="160" y="54" fill="#ffcc80" font-size="10" font-family="sans-serif">version guard</text>
+</svg>`,
+
+  lakeauth: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="50" y="25" width="180" height="50" rx="8" fill="#37474f" stroke="#ffcc80"/>
+  <text x="140" y="48" text-anchor="middle" fill="#ffcc80" font-size="12" font-family="sans-serif">🔑 IAM / ACL</text>
+  <text x="140" y="64" text-anchor="middle" fill="#b0bec5" font-size="9" font-family="sans-serif">least privilege</text>
+</svg>`,
+
+  sqle2e: `
+<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" class="viz">
+  <rect x="20" y="35" width="50" height="30" rx="4" fill="#1565c0"/><text x="45" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">in</text>
+  <path d="M75 50 H105" stroke="#ff8a50" stroke-width="2"/>
+  <rect x="110" y="30" width="60" height="40" rx="4" fill="#e65100"/><text x="140" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">SQL</text>
+  <path d="M175 50 H205" stroke="#ff8a50" stroke-width="2"/>
+  <rect x="210" y="35" width="50" height="30" rx="4" fill="#2e7d32"/><text x="235" y="54" text-anchor="middle" fill="#fff" font-size="8" font-family="sans-serif">assert</text>
+</svg>`,
 };
