@@ -6,19 +6,20 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#0b0f1a" />
+    <meta name="theme-color" content="#100b0d" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <title>Flink Card Deck · 학습 카드</title>
+    <meta name="description" content="Redis 공식 문서 기반 모바일 학습 카드 (샘플 14장)" />
+    <title>Redis Card Deck · 학습 카드</title>
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
     <div class="app">
       <header class="topbar">
         <div class="brand">
-          <strong>⚡ FLINK CARD DECK</strong>
-          <span>공식 문서 기반 학습 카드</span>
+          <strong>🧱 REDIS CARD DECK</strong>
+          <span>공식 문서 기반 · 샘플 14장</span>
         </div>
-        <div class="progress-pill" id="progress">1 / 140</div>
+        <div class="progress-pill" id="progress">1 / 14</div>
       </header>
 
       <!-- Viewer -->
@@ -44,17 +45,16 @@
       <section class="view" id="view-dex">
         <div class="dex-header">
           <h2>도감</h2>
-          <div class="rate" id="collect-rate"><b>0</b>/140 (0%)</div>
+          <div class="rate" id="collect-rate"><b>0</b>/14 (0%)</div>
         </div>
         <div class="filters">
           <button type="button" class="filter-chip active" data-filter="ALL">전체</button>
           <button type="button" class="filter-chip" data-filter="STARTER">STARTER</button>
-          <button type="button" class="filter-chip" data-filter="CORE">CORE</button>
+          <button type="button" class="filter-chip" data-filter="TYPE">TYPE</button>
           <button type="button" class="filter-chip" data-filter="ARCH">ARCH</button>
-          <button type="button" class="filter-chip" data-filter="API">API</button>
           <button type="button" class="filter-chip" data-filter="OPS">OPS</button>
+          <button type="button" class="filter-chip" data-filter="PROG">PROG</button>
           <button type="button" class="filter-chip" data-filter="UR">UR+</button>
-          <button type="button" class="filter-chip" data-filter="LR">LR</button>
           <button type="button" class="filter-chip" data-filter="OWNED">수집</button>
           <button type="button" class="filter-chip" data-filter="LOCKED">미수집</button>
         </div>
@@ -65,7 +65,7 @@
       <section class="view" id="view-path">
         <div class="dex-header">
           <h2>학습 패스</h2>
-          <div class="rate">문서 순서 학습</div>
+          <div class="rate">자료구조 → 아키텍처 → 운영</div>
         </div>
         <div class="path-scroll" id="path-scroll"></div>
       </section>
@@ -90,8 +90,6 @@
 
     <script src="js/visuals.js"></script>
     <script src="js/cards.js"></script>
-    <script src="js/cards-extra.js"></script>
-    <script src="js/cards-advanced.js"></script>
     <script src="js/app.js"></script>
   </body>
 </html>

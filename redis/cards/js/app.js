@@ -1,15 +1,25 @@
 (() => {
-  const CARDS = window.FLINK_CARDS;
-  const VISUALS = window.FLINK_VISUALS || {};
-  const STORAGE_KEY = "flink-card-deck-v2";
+  const CARDS = window.REDIS_CARDS;
+  const VISUALS = window.REDIS_VISUALS || {};
+  const STORAGE_KEY = "redis-card-deck-v1";
   const RARITY_WEIGHT = { N: 40, R: 30, SR: 18, UR: 10, LR: 2 };
+
+  const TYPE_ORDER = ["STARTER", "TYPE", "ARCH", "OPS", "PROG"];
 
   const TYPE_LABEL = {
     STARTER: "입문 STARTER",
-    CORE: "핵심 CORE",
+    TYPE: "자료구조 TYPE",
     ARCH: "아키텍처 ARCH",
-    API: "API 계층",
     OPS: "운영 OPS",
+    PROG: "프로그래밍 PROG",
+  };
+
+  const TYPE_GLYPH = {
+    STARTER: "①",
+    TYPE: "②",
+    ARCH: "③",
+    OPS: "④",
+    PROG: "⑤",
   };
 
   const state = {
@@ -125,7 +135,7 @@
         <p>${escapeHtml(c.effect)}</p>
       </div>
       <div class="flavor">「${escapeHtml(c.flavor)}」</div>
-      <div class="hint-tap">탭 → 상세 + 코드</div>
+      <div class="hint-tap">탭 → 상세 + 명령어</div>
     `;
 
     faceBack.innerHTML = `
@@ -139,7 +149,7 @@
           <p>${escapeHtml(c.detail)}</p>
         </div>
         <div class="code-box">
-          <div class="label">CODE</div>
+          <div class="label">COMMANDS</div>
           <pre><code>${escapeHtml(c.code || "")}</code></pre>
         </div>
         <div class="hint-tap">탭 → 앞면</div>
@@ -334,14 +344,7 @@
   }
 
   function dexGlyph(c) {
-    const map = {
-      STARTER: "①",
-      CORE: "②",
-      ARCH: "③",
-      API: "④",
-      OPS: "⑤",
-    };
-    return map[c.type] || "◆";
+    return TYPE_GLYPH[c.type] || "◆";
   }
 
   function renderDex() {
@@ -378,12 +381,11 @@
   }
 
   function renderPath() {
-    const types = ["STARTER", "CORE", "ARCH", "API", "OPS"];
-    pathScroll.innerHTML = types
-      .map((type) => {
-        const cards = CARDS.filter((c) => c.type === type);
-        const owned = cards.filter((c) => state.owned.has(c.id)).length;
-        return `
+    pathScroll.innerHTML = TYPE_ORDER.map((type) => {
+      const cards = CARDS.filter((c) => c.type === type);
+      if (!cards.length) return "";
+      const owned = cards.filter((c) => state.owned.has(c.id)).length;
+      return `
         <div class="path-block">
           <h3>${TYPE_LABEL[type] || type} <b>${owned}/${cards.length}</b></h3>
           <div class="path-list">
@@ -405,8 +407,7 @@
               .join("")}
           </div>
         </div>`;
-      })
-      .join("");
+    }).join("");
 
     pathScroll.querySelectorAll(".path-item").forEach((item) => {
       item.addEventListener("click", () => {

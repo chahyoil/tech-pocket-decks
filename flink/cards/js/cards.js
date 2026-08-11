@@ -232,9 +232,8 @@ src.map(new A()).map(new B());
     attrs: ["Key"],
     atk: "키 파티션",
     def: "그룹 처리",
-    effect:
-      "같은 키 이벤트는 같은 서브태스크로. 키드 상태·윈도우·집계의 전제 조건이다
-    flavor: "같은 열쇠 → 같은 문.",
+    effect: "같은 키 이벤트는 같은 서브태스크로. 키드 상태, 윈도우, 집계의 전제 조건이다",
+    flavor: "같은 열쇠 -> 같은 문.",
     visual: "keyby",
     snippet: "keyBy(e -> e.userId)",
     detail:
