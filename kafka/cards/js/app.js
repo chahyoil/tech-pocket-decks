@@ -81,7 +81,7 @@
       <div class="back-inner">
         <div class="back-header">
           <h2>${data.titleKo}</h2>
-          <span class="badge-lang">KAFKA v4.3</span>
+          ${data.docUrl ? `<a href="${data.docUrl}" target="_blank" rel="noopener" class="doc-link" onclick="event.stopPropagation();">📖 공식 문서 ↗</a>` : `<span class="badge-lang">KAFKA v4.3</span>`}
         </div>
         <div class="detail-box">
           <div class="label">OFFICIAL DETAIL</div>

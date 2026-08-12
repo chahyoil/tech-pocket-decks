@@ -4,12 +4,13 @@
   const STORAGE_KEY = "redis-card-deck-v1";
   const RARITY_WEIGHT = { N: 40, R: 30, SR: 18, UR: 10, LR: 2 };
 
-  const TYPE_ORDER = ["STARTER", "TYPE", "ARCH", "OPS", "PROG", "PATTERN"];
+  const TYPE_ORDER = ["STARTER", "TYPE", "ARCH", "INTERNAL", "OPS", "PROG", "PATTERN"];
 
   const TYPE_LABEL = {
     STARTER: "입문 STARTER",
     TYPE: "자료구조 TYPE",
     ARCH: "아키텍처 ARCH",
+    INTERNAL: "내부 구조 INTERNAL",
     OPS: "운영 OPS",
     PROG: "프로그래밍 PROG",
     PATTERN: "실전 패턴 PATTERN",
@@ -19,9 +20,10 @@
     STARTER: "①",
     TYPE: "②",
     ARCH: "③",
-    OPS: "④",
-    PROG: "⑤",
-    PATTERN: "⑥",
+    INTERNAL: "④",
+    OPS: "⑤",
+    PROG: "⑥",
+    PATTERN: "⑦",
   };
 
   const state = {

@@ -2677,4 +2677,1332 @@ spec:
 # kernel >= 5.15, containerd >= 1.7`,
     lang: "yaml",
   },
+
+  // 81 ~ 120: DEEP DIVE — Pod internals, Extending, Cluster admin, Windows, Scheduling
+  {
+    id: "WL-081",
+    type: "WORKLOAD",
+    chapter: "WORKLOADS · PODS",
+    level: "DEEP",
+    nameEn: "POD CONDITIONS",
+    nameKo: "파드 컨디션",
+    visual: "probe",
+    icon: "COND",
+    attrs: ["Type", "Status"],
+    atk: "PodScheduled / Ready",
+    def: "Initialized / ContainersReady",
+    effect:
+      "Pod Conditions는 Pod의 세부 상태(PodScheduled, Initialized, ContainersReady, Ready)를 True/False로 보고한다.",
+    flavor: "phase는 큰 그림, condition은 세부 판정.",
+    detail:
+      "status.phase는 Pending/Running/Succeeded/Failed 같은 큰 단계만 알려주지만, condition은 왜 아직 Ready가 아닌지 세부적으로 판별한다. PodScheduled(노드 할당 여부), Initialized(init 완료), ContainersReady(모든 컨테이너 준비), Ready(트래픽 수신 가능)가 핵심 type이다. 각 condition은 status(True/False/Unknown), lastTransitionTime, reason, message를 가진다. readinessGates로 커스텀 condition을 추가할 수도 있다.",
+    code: `# Pod conditions 확인
+kubectl get pod web -o \\
+  jsonpath='{.status.conditions}' | jq
+
+# Ready condition만 추출
+kubectl get pod web -o \\
+  jsonpath='{.status.conditions[?(@.type=="Ready")]}'
+
+# readinessGates (외부 컨디션)
+spec:
+  readinessGates:
+    - conditionType: example.com/feature-ready`,
+    lang: "bash",
+  },
+  {
+    id: "WL-082",
+    type: "WORKLOAD",
+    chapter: "WORKLOADS · PODS",
+    level: "DEEP",
+    nameEn: "POD HOSTNAME",
+    nameKo: "파드 호스트네임",
+    visual: "pod",
+    icon: "HOST",
+    attrs: ["DNS", "hostname"],
+    atk: "setHostnameAsFQDN",
+    def: "subdomain",
+    effect:
+      "Pod의 hostname과 subdomain로 <hostname>.<subdomain>.<ns>.svc.cluster.local 형태의 DNS를 가질 수 있다.",
+    flavor: "파드도 이름을 가질 수 있다.",
+    detail:
+      "기본적으로 Pod는 <pod-ip-dashed>.<ns>.pod.cluster.local 형태의 DNS 레코드를 갖는다. hostname과 subdomain을 지정하면 <hostname>.<subdomain>.<ns>.svc.cluster.local 형태로 접근 가능하다. 이때 subdomain과 같은 이름의 Headless Service가 있어야 DNS가 생성된다. setHostnameAsFQDN: true면 컨테이너 내부 hostname 명령이 FQDN을 반환한다.",
+    code: `# hostname + subdomain 지정
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-0
+spec:
+  hostname: web-0
+  subdomain: web-headless
+  setHostnameAsFQDN: true
+  containers:
+    - name: app
+      image: app:1.0
+
+# 같은 이름의 Headless Service 필요
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: web-headless
+# spec:
+#   clusterIP: None
+#   selector:
+#     app: web`,
+    lang: "yaml",
+  },
+  {
+    id: "WL-083",
+    type: "WORKLOAD",
+    chapter: "WORKLOADS · PODS",
+    level: "DEEP",
+    nameEn: "SCHEDULING GROUP",
+    nameKo: "스케줄링 그룹",
+    visual: "sched",
+    icon: "SG",
+    attrs: ["Cohort", "Batch"],
+    atk: "Pod 그룹 스케줄",
+    def: "동시 배치",
+    effect:
+      "Scheduling Group은 서로 연관된 Pod들을 그룹으로 묶어, 같은 노드/영역에 동시 스케줄되도록 유도한다.",
+    flavor: "함께 가야 할 동행자들.",
+    detail:
+      "Batch/AI 워크로드에서 워커 Pod들이 같은 노드나 토폴로지에 함께 배치되어야 통신 지연이 최소화된다. schedulingGroupName 필드나 affinity podAffinity를 통해 Pod를 그룹으로 묶고, 스케줄러가 이를 인식해 같은 도메인에 배치한다. Gang Scheduling(모두 스케줄되거나 아무도 안 됨)과 다르게, '같은 위치' 선호도를 표현하는 데 가깝다. 대규모 분산 학습, MPI/HPC 작업에 활용된다.",
+    code: `# podAffinity로 같은 노드 선호
+spec:
+  affinity:
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: distributed-train
+          topologyKey: kubernetes.io/hostname
+  containers:
+    - name: worker
+      image: train:1.0`,
+    lang: "yaml",
+  },
+  {
+    id: "WL-084",
+    type: "WORKLOAD",
+    chapter: "WORKLOADS · PODS",
+    level: "DEEP",
+    nameEn: "ADVANCED POD CONFIG",
+    nameKo: "파드 고급 설정",
+    visual: "pod",
+    icon: "ADV",
+    attrs: ["ShareProcessNamespace", "HostAliases"],
+    atk: "컨테이너 간 프로세스 공유",
+    def: "호스트 alias 주입",
+    effect:
+      "shareProcessNamespace, hostAliases, hostNetwork, hostPID 같은 고급 설정으로 Pod의 격리 경계를 조절한다.",
+    flavor: "격리의 벽을 조금씩 열기.",
+    detail:
+      "shareProcessNamespace: true면 같은 Pod의 컨테이너가 서로의 프로세스를(PID 1 포함) 볼 수 있어 디버깅 사이드카에 유용하다. hostNetwork/hostPID는 노드의 네트워크/PID 네임스페이스를 직접 쓴다(보안상 제한됨). hostAliases로 /etc/hosts 항목을 주입하고, dnsPolicy(ClusterFirst/None)로 DNS 동작을 제어한다. 이런 설정은 privileged와 함께 신중히 사용해야 한다.",
+    code: `# 고급 Pod 설정
+spec:
+  shareProcessNamespace: true
+  hostNetwork: false
+  hostAliases:
+    - ip: "10.0.0.1"
+      hostnames: ["db.local", "cache.local"]
+  dnsPolicy: ClusterFirst
+  dnsConfig:
+    nameservers: ["1.1.1.1"]
+    searches: ["svc.cluster.local"]
+  containers:
+    - name: app
+      image: app:1.0`,
+    lang: "yaml",
+  },
+  {
+    id: "WL-085",
+    type: "WORKLOAD",
+    chapter: "WORKLOADS · WORKLOAD API",
+    level: "DEEP",
+    nameEn: "PODGROUP API",
+    nameKo: "PodGroup API",
+    visual: "sched",
+    icon: "PG",
+    attrs: ["Gang", "Co-schedule"],
+    atk: "전체 또는 없음",
+    def: "minMember",
+    effect:
+      "PodGroup은 연관된 Pod 집합을 하나의 스케줄링 단위로 묶어, minMember 수가 충족되지 않으면 전체가 스케줄되지 않는다.",
+    flavor: "모 아니면 도.",
+    detail:
+      "분산 학습, MPI, 병렬 배치 작업에서 일부 Pod만 스케줄되면 전체 작업이 의미 없는 경우가 많다. PodGroup은 minMember로 '최소 이 수만큼 동시에 스케줄되어야 시작'을 선언한다. 스케줄러가 조건을 만족하는 노드 자원을 찾지 못하면 Pending 상태로 보류하고, 충족되면 일괄 스케줄한다. Coscheduling/Volcano 같은 스케줄러 플러그인이 이를 구현한다.",
+    code: `# PodGroup 정의 (스케줄러 확장 필요)
+apiVersion: scheduling.sigs.k8s.io/v1beta1
+kind: PodGroup
+metadata:
+  name: train-job
+spec:
+  scheduleTimeoutSeconds: 60
+  minMember: 4  # 4개 모두 스케줄되어야 시작
+  minTaskMember:
+    worker: 3
+    master: 1
+
+# Pod에서 참조
+#   annotations:
+#     scheduling.sigs.k8s.io/podgroup: train-job`,
+    lang: "yaml",
+  },
+  {
+    id: "WL-086",
+    type: "WORKLOAD",
+    chapter: "WORKLOADS · CONTROLLERS",
+    level: "DEEP",
+    nameEn: "REPLICATIONCONTROLLER",
+    nameKo: "레플리케이션컨트롤러 (레거시)",
+    visual: "deploy",
+    icon: "RC",
+    attrs: ["Legacy", "Replicas"],
+    atk: "레플리카 유지(원시)",
+    def: "롤링 미지원",
+    effect:
+      "ReplicationController는 Pod 레플리카 수를 유지하는 원시 컨트롤러로, Deployment/ReplicaSet에 의해 대체되었다.",
+    flavor: "첫 세대의 파드 수호자.",
+    detail:
+      "ReplicationController는 쿠버네티스 초기부터 있던 컨트롤러로, label selector로 Pod를 매칭해 replicas 수를 유지한다. 하지만 RollingUpdate나 롤백 기능이 없고, 셀렉터에 set-based 조건을 쓸 수 없다. 현재는 ReplicaSet(더 유연한 셀렉터)과 Deployment(롤아웃 관리)로 대체되었으며, 신규 워크로드에는 사용하지 않는다. 기존 클러스터에서만 레거시로 남아있을 수 있다.",
+    code: `# ReplicationController (레거시)
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: web-rc
+spec:
+  replicas: 3
+  selector:
+    app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.27
+
+# 권장: Deployment + ReplicaSet 사용`,
+    lang: "yaml",
+  },
+  {
+    id: "WL-087",
+    type: "WORKLOAD",
+    chapter: "WORKLOADS · CONTROLLERS",
+    level: "DEEP",
+    nameEn: "JOB TTL AFTER FINISHED",
+    nameKo: "완료 잡 자동 정리 (TTL)",
+    visual: "pod",
+    icon: "TTL",
+    attrs: ["Cleanup", "ttlSecondsAfterFinished"],
+    atk: "완료 후 자동 삭제",
+    def: "TTL 컨트롤러",
+    effect:
+      "ttlSecondsAfterFinished를 지정하면 Job이 완료/실패 후 지정 시간 뒤 TTL 컨트롤러가 자동으로 Job과 Pod를 삭제한다.",
+    flavor: "끝난 일은 스스로 치운다.",
+    detail:
+      "Job이 완료(Succeeded/Failed) 상태가 되면 ttlSecondsAfterFinished 초가 지난 뒤 TTL 컨트롤러가 Job과 연관된 Pod를 함께 삭제한다. CronJob처럼 주기적으로 실행되는 작업에서 잔여 Job이 쌓이는 것을 막고, 클러스터를 깔끔하게 유지한다. 별도 삭제 스크립트나 CronJob cleanup이 필요 없다. 미지정 시 Job은 수동 삭제 전까지 남는다.",
+    code: `# Job에 TTL 설정
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-migrate
+spec:
+  ttlSecondsAfterFinished: 3600  # 1시간 후 자동 삭제
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migrate
+          image: migrate:1.0
+          command: ["./migrate.sh"]
+
+# 완료된 Job 목록
+kubectl get jobs -A \\
+  --field-selector=status.successful>0`,
+    lang: "yaml",
+  },
+  {
+    id: "WL-088",
+    type: "WORKLOAD",
+    chapter: "WORKLOADS · CONTROLLERS",
+    level: "DEEP",
+    nameEn: "POD FAILURE POLICY",
+    nameKo: "파드 실패 정책",
+    visual: "pod",
+    icon: "PFP",
+    attrs: ["Retry", "FailFast"],
+    atk: "실패 코드별 정책",
+    def: "재시도 vs 영구실패",
+    effect:
+      "Pod failure policy는 컨테이너 종료 코드/조건에 따라 Job을 재시도할지 영구 실패시킬지 결정한다.",
+    flavor: "실패에도 종류가 있다.",
+    detail:
+      "기본적으로 Job은 Pod 실패 시 backoffLimit까지 재시도한다. Pod failure policy를 사용하면, 특정 exit code(예: 42번은 영구 실패)나 컨테이너 상태에 따라 '재시도 금지(FailIndex)' 또는 '재시도(Ignore)'를 지정할 수 있다. 애플리케이션 버그(영구 실패)와 일시적 인프라 오류(재시도)를 구분해 불필요한 재시도를 줄이고 실패를 빠르게 보고한다.",
+    code: `# Pod failure policy 정의
+spec:
+  podFailurePolicy:
+    rules:
+      - action: FailJob
+        onExitCodes:
+          containerName: main
+          operator: In
+          values: [42]  # 42번은 영구 실패
+      - action: Ignore
+        onPodConditions:
+          - type: DisruptionTarget  # 노드 장애는 재시도
+  backoffLimit: 6`,
+    lang: "yaml",
+  },
+  {
+    id: "WL-089",
+    type: "WORKLOAD",
+    chapter: "WORKLOADS · MANAGEMENT",
+    level: "DEEP",
+    nameEn: "MANAGING WORKLOADS",
+    nameKo: "워크로드 관리",
+    visual: "deploy",
+    icon: "MGT",
+    attrs: ["Update", "Scale"],
+    atk: "선언적 업데이트",
+    def: "스케일 인/아웃",
+    effect:
+      "워크로드 관리는 kubectl apply/scale로 desired state를 선언적으로 변경하고, 컨트롤러가 실제 상태를 수렴시킨다.",
+    flavor: "명령이 아니라 선언으로 다스린다.",
+    detail:
+      "kubectl apply -f로 매니페스트를 적용하면 컨트롤러가 차이를 계산해 롤링 업데이트를 수행한다. kubectl scale로 레플리카 수를 변경하고, kubectl rollout으로 배포 이력을 관리한다. 선언적 모델 덕분에 GitOps(ArgoCD, Flux)로 전체 클러스터 상태를 Git 저장소에서 관리할 수 있다. 명령형 kubectl create/replace보다 apply가 last-applied-configuration을 기록해 3-way merge를 지원한다.",
+    code: `# 선언적 적용
+kubectl apply -f deployment.yaml
+
+# 스케일
+kubectl scale deployment web --replicas=5
+
+# 롤아웃 관리
+kubectl rollout status deployment/web
+kubectl rollout history deployment/web
+kubectl rollout undo deployment/web --to-revision=2
+
+# 3-way merge (apply) vs replace
+kubectl apply -f deployment.yaml  # 권장`,
+    lang: "bash",
+  },
+  {
+    id: "WL-090",
+    type: "WORKLOAD",
+    chapter: "WORKLOADS · AUTOSCALING",
+    level: "DEEP",
+    nameEn: "AUTOSCALING WORKLOADS",
+    nameKo: "워크로드 오토스케일링",
+    visual: "hpa",
+    icon: "AS",
+    attrs: ["HPA", "VPA", "CA"],
+    atk: "Pod/노드 자동 확장",
+    def: "세 가지 축",
+    effect:
+      "워크로드 오토스케일링은 HPA(Pod 수), VPA(Pod 자원), Cluster Autoscaler(노드 수) 세 축으로 확장을 자동화한다.",
+    flavor: "부하에 맞춰 유기적으로 키운다.",
+    detail:
+      "HPA는 메트릭 기반으로 Pod 수를 조정하고, VPA는 Pod의 CPU/메모리 requests를 조정하며, Cluster Autoscaler는 Pending Pod가 있으면 노드를 추가하고 여유가 생기면 제거한다. 세 축을 함께 쓸 때는 주의가 필요하다 — HPA와 VPA가 같은 메트릭(CPU/메모리)을 동시에 조정하면 충돌이 발생한다. 보통 HPA(수평) + Cluster Autoscaler(노드) 조합이 일반적이고, VPA는 Off/Initial 모드로 추천값만 활용한다.",
+    code: `# Cluster Autoscaler 로그
+kubectl logs -n kube-system \\
+  -l app=cluster-autoscaler --tail=50
+
+# Pending Pod (노드 부족으로 스케줄 대기)
+kubectl get pods -A \\
+  --field-selector=status.phase=Pending
+
+# HPA + CA 연동 확인
+kubectl get hpa
+kubectl get nodes -w  # 노드 증감 관찰`,
+    lang: "bash",
+  },
+  {
+    id: "ARC-091",
+    type: "ARCH",
+    chapter: "CLUSTER ADMINISTRATION",
+    level: "DEEP",
+    nameEn: "COORDINATED LEADER ELECTION",
+    nameKo: "조정된 리더 선출",
+    visual: "object",
+    icon: "CLE",
+    attrs: ["Lease", "HA"],
+    atk: "다중 컨트롤러 리더",
+    def: "단일 활성 보장",
+    effect:
+      "Coordinated Leader Election은 HA 컨트롤 플레인에서 여러 컨트롤러 인스턴스 중 하나만 활성 리더로 동작하게 보장한다.",
+    flavor: "여럿이 서되, 명령은 하나.",
+    detail:
+      "HA 클러스터에서 kube-controller-manager, kube-scheduler는 여러 인스턴스가 실행되지만, 동시에 활성(active)인 것은 하나뿐이어야 한다. 각 인스턴스가 Lease 리소스를 획득하려 경쟁하고, 획득한 인스턴스만 리더로 동작한다. 리더가 장애 나면 leaseDurationSeconds 후 나머지 인스턴스 중 새 리더가 선출된다. 이 메커니즘이 컨트롤 플레인 HA의 핵심이다.",
+    code: `# 컨트롤 매니저 리더 확인
+kubectl get lease -n kube-system \\
+  -l component=kube-controller-manager
+
+# 현재 리더 인스턴스
+kubectl get lease -n kube-system \\
+  kube-controller-manager -o \\
+  jsonpath='{.spec.holderIdentity}'
+
+# 스케줄러 리더
+kubectl get lease -n kube-system \\
+  kube-scheduler -o yaml | grep holder`,
+    lang: "bash",
+  },
+  {
+    id: "ARC-092",
+    type: "ARCH",
+    chapter: "CLUSTER ADMINISTRATION",
+    level: "DEEP",
+    nameEn: "OBSERVABILITY",
+    nameKo: "관측성 (Observability)",
+    visual: "probe",
+    icon: "OBS",
+    attrs: ["Metrics", "Logs", "Traces"],
+    atk: "세 가지 신호",
+    def: "시스템 가시성",
+    effect:
+      "관측성은 메트릭, 로그, 트레이스 세 축으로 클러스터와 워크로드의 내부 상태를 외부에서 이해할 수 있게 한다.",
+    flavor: "보이지 않는 것을 보이게.",
+    detail:
+      "Metrics는 수치 시계열(CPU, 메모리, QPS — Prometheus/Metrics Server), Logs는 이벤트 기록(Fluentd/Loki, kubelet), Traces는 요청 단위 경로(OpenTelemetry/Jaeger)를 제공한다. 클러스터 시스템 컴포넌트는 /metrics 엔드포인트를 노출하고, kube-state-metrics는 오브젝트 상태를 메트릭으로 변환한다. 디버깅과 SLO 관리의 기반이다.",
+    code: `# 메트릭 서버 (HPA/VPA용)
+kubectl top nodes
+kubectl top pods -A
+
+# 컨트롤 플레인 메트릭
+kubectl get --raw='/metrics' | head -20
+
+# kube-state-metrics
+kubectl get deploy -n kube-system \\
+  kube-state-metrics
+
+# 로그 스트리밍
+kubectl logs -f deploy/web -n app`,
+    lang: "bash",
+  },
+  {
+    id: "ARC-093",
+    type: "ARCH",
+    chapter: "CLUSTER ADMINISTRATION",
+    level: "DEEP",
+    nameEn: "LOGGING ARCHITECTURE",
+    nameKo: "로깅 아키텍처",
+    visual: "pod",
+    icon: "LOG",
+    attrs: ["stdout", "Cluster-level"],
+    atk: "컨테이너 stdout/stderr",
+    def: "중앙 수집",
+    effect:
+      "Kubernetes는 컨테이너 로그를 stdout/stderr로 수집하고, 노드에서 로테이션하며, 에이전트가 중앙 저장소로 전송한다.",
+    flavor: "로그는 흐르고, 모이고, 검색된다.",
+    detail:
+      "컨테이너는 파일이 아닌 stdout/stderr로 로그를 출력하는 것이 권장된다. kubelet이 이를 /var/log/pods/<pod>/<container>에 저장하고, 크기 제한(기본 10Mi × 5)으로 로테이션한다. 클러스터 수준 로깅은 별도 에이전트(DaemonSet으로 배포된 Fluentd/Fluent Bit/Filebeat)가 노드 로그를 읽어 중앙(Elasticsearch, Loki, S3)으로 보낸다. kubectl logs는 노드 로컬 파일을 직접 읽는다.",
+    code: `# Pod 로그 확인
+kubectl logs web -n app
+kubectl logs web -n app --previous  # 크래시 전 로그
+kubectl logs -f deploy/web  # 스트리밍
+
+# 노드의 로그 파일 경로
+# /var/log/pods/<ns>_<pod>_<uid>/<container>/
+
+# 로그 용량 제한 (kubelet)
+# /var/lib/kubelet/config.yaml
+# containerLogMaxSize: "10Mi"
+# containerLogMaxFiles: 5`,
+    lang: "bash",
+  },
+  {
+    id: "ARC-094",
+    type: "ARCH",
+    chapter: "CLUSTER ADMINISTRATION",
+    level: "DEEP",
+    nameEn: "SYSTEM METRICS",
+    nameKo: "시스템 컴포넌트 메트릭",
+    visual: "probe",
+    icon: "SM",
+    attrs: ["Prometheus", "/metrics"],
+    atk: "컴포넌트별 /metrics",
+    def: "kube-state-metrics",
+    effect:
+      "컨트롤 플레인과 kubelet은 /metrics 엔드포인트로 Prometheus 메트릭을 노출하고, kube-state-metrics는 오브젝트 상태를 메트릭으로 변환한다.",
+    flavor: "클러스터의 맥박을 재다.",
+    detail:
+      "kube-apiserver, controller-manager, scheduler, kubelet, etcd는 모두 /metrics(또는 /metrics/cadvisor for kubelet) 엔드포인트를 제공한다. Prometheus가 이를 스크랩해 시계열로 저장한다. kube-state-metrics는 API를 watch해 Deployment, Pod, Node 같은 오브젝트의 상태(레플리카 수, phase 등)를 메트릭으로 노출한다. cAdvisor는 컨테이너별 CPU/메모리/네트워크 메트릭을 제공한다.",
+    code: `# kubelet 메트릭 (컨테이너별)
+kubectl get --raw='/api/v1/nodes/worker-1/proxy/metrics/cadvisor' | head
+
+# API 서버 메트릭
+kubectl get --raw='/metrics' | grep apiserver_request
+
+# kube-state-metrics 배포
+kubectl get deploy -n kube-system kube-state-metrics
+
+# cAdvisor 웹 UI (노드 직접 접근)
+# https://<node-ip>:10250/metrics/cadvisor`,
+    lang: "bash",
+  },
+  {
+    id: "ARC-095",
+    type: "ARCH",
+    chapter: "CLUSTER ADMINISTRATION",
+    level: "DEEP",
+    nameEn: "API PRIORITY & FAIRNESS",
+    nameKo: "API 우선순위와 공정성",
+    visual: "webhook",
+    icon: "APF",
+    attrs: ["Flow", "PriorityLevel"],
+    atk: "요청 대기열 분류",
+    def: "공정 대역폭",
+    effect:
+      "API Priority and Fairness(APF)는 API 요청을 FlowSchema로 분류하고 PriorityLevelConfiguration으로 대역폭을 공정 분배한다.",
+    flavor: "모든 요청이 동등하지는 않다.",
+    detail:
+      "과거에는 MaximumMutating/ReadOnly in-flight 요청 수로만 제한했다. APF는 요청을 flow(예: system, leader-election, workload)로 분류하고, 각 priority level에 대해 동시 실행 수와 대기열 규모를 설정한다. 중요한 컨트롤러 요청(leader-election)은 높은 우선순위로 보호되고, 일반 워크로드는 별도 대역으로 격리되어 한 그룹이 API를 독점하지 못한다. 노이즈 워크로드가 클러스터 전체를 마비시키는 것을 막는다.",
+    code: `# FlowSchema 확인
+kubectl get flowschema
+
+# PriorityLevelConfiguration
+kubectl get prioritylevelconfiguration
+
+# APF 상태 메트릭
+kubectl get --raw='/metrics' | grep apiserver_flow
+
+# 특정 flow의 우선순위
+kubectl describe flowschema workload-leader-election`,
+    lang: "bash",
+  },
+  {
+    id: "SCH-096",
+    type: "SCHED",
+    chapter: "SCHEDULING & EVICTION",
+    level: "DEEP",
+    nameEn: "GANG SCHEDULING",
+    nameKo: "갱 스케줄링",
+    visual: "sched",
+    icon: "GANG",
+    attrs: ["All-or-nothing", "Co-schedule"],
+    atk: "전체 Pod 동시 스케줄",
+    def: "불가 시 전체 보류",
+    effect:
+      "Gang Scheduling은 그룹의 모든 Pod가 동시에 스케줄되거나, 아무도 스케줄되지 않도록 보장한다.",
+    flavor: "모 아니면 도, 중간은 없다.",
+    detail:
+      "MPI, 분산 딥러닝, 병렬 작업에서 일부 Pod만 실행되면 전체가 의미 없다. Gang Scheduling은 PodGroup의 minMember를 충족하는 자원이 확보될 때까지 전체를 Pending으로 유지하고, 충족되면 일괄 스케줄한다. 기본 kube-scheduler는 Gang을 지원하지 않고, Volcano, Kueue, Coscheduling plugin 같은 확장이 필요하다. 자원 파편화 문제를 해결하지만, 대기 시간이 길어질 수 있다.",
+    code: `# Volcano PodGroup (Gang)
+apiVersion: scheduling.volcano.sh/v1beta1
+kind: PodGroup
+metadata:
+  name: mpi-job
+spec:
+  minMember: 4
+  queue: default
+  priorityClassName: high
+
+# 스케줄 대기 중인 Gang
+kubectl get podgroup -A
+kubectl describe podgroup mpi-job | grep -A5 Phase`,
+    lang: "yaml",
+  },
+  {
+    id: "SCH-097",
+    type: "SCHED",
+    chapter: "SCHEDULING & EVICTION",
+    level: "DEEP",
+    nameEn: "RESOURCE BIN PACKING",
+    nameKo: "자원 빈 패킹",
+    visual: "qos",
+    icon: "BIN",
+    attrs: ["Dense", "Scoring"],
+    atk: "노드 자원 밀집",
+    def: "스케줄 점수",
+    effect:
+      "Resource Bin Packing 스케줄링 정책은 Pod를 가능한 한 적은 노드에 밀집시켜, 노드 수를 절약하고 빈 노드를 스케일인 대상으로 남긴다.",
+    flavor: "가득 채운 상자부터.",
+    detail:
+      "기본 스케줄러의 LeastAllocated 점수는 자원이 여유로운 노드를 선호해 Pod를 넓게 퍼뜨린다. 반대로 bin packing(MostAllocated)은 잔여 자원이 적은(이미 찬) 노드에 높은 점수를 줘, Pod를 밀집 배치한다. 클러스터 오토스케일러가 빈 노드를 감지해 제거하기 쉬워진다. Scoring plugin 설정으로 정책을 전환할 수 있다. 비용 최적화와 빈 노드 축소가 목적이다.",
+    code: `# 스케줄러 정책 (bin packing)
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+profiles:
+  - schedulerName: binpack
+    pluginConfig:
+      - name: NodeResourcesFit
+        args:
+          scoringStrategy:
+            type: MostAllocated  # bin packing
+            resources:
+              - name: cpu
+                weight: 1
+              - name: memory
+                weight: 1`,
+    lang: "yaml",
+  },
+  {
+    id: "SCH-098",
+    type: "SCHED",
+    chapter: "SCHEDULING & EVICTION",
+    level: "DEEP",
+    nameEn: "WORKLOAD-AWARE PREEMPTION",
+    nameKo: "워크로드 인식 선점",
+    visual: "qos",
+    icon: "WAP",
+    attrs: ["Preempt", "Selectivity"],
+    atk: "선점 대상 선별",
+    def: "중요도 고려",
+    effect:
+      "Workload-Aware Preemption은 단순 우선순위 외에 워크로드 특성(ReplicaSet, StatefulSet)을 고려해 선점 대상을 더 정교하게 선택한다.",
+    flavor: "덜 중요한 일을, 더 영향 적게.",
+    detail:
+      "기본 선점은 가장 낮은 priorityClass의 Pod를 퇴거시킨다. 하지만 무작정 퇴거하면 Deployment의 Pod 여러 개가 동시에 사라져 가용성이 떨어질 수 있다. Workload-Aware Preemption은 같은 ReplicaSet에서는 한 번에 하나만, StatefulSet은 더 신중히, PodDisruptionBudget을 존중하는 등 워크로드 특성을 반영해 선입 피해를 최소화한다. 스케줄러 플러그인으로 구현된다.",
+    code: `# 우선순위와 PDB 함께 사용
+spec:
+  priorityClassName: high-priority
+  containers:
+    - name: app
+      image: app:1.0
+---
+# PDB로 선점 피해 최소화
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: web-pdb
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: web`,
+    lang: "yaml",
+  },
+  {
+    id: "SCH-099",
+    type: "SCHED",
+    chapter: "SCHEDULING & EVICTION",
+    level: "DEEP",
+    nameEn: "NODE DECLARED FEATURES",
+    nameKo: "노드 선언 기능",
+    visual: "sched",
+    icon: "NDF",
+    attrs: ["Feature", "Advertising"],
+    atk: "노드 기능 광고",
+    def: "스케줄 매칭",
+    effect:
+      "Node Declared Features는 노드가 자신의 하드웨어/커널 기능을 라벨/어노테이션으로 선언해, 스케줄러가 이를 Pod 요구사항과 매칭한다.",
+    flavor: "노드의 이력서.",
+    detail:
+      "노드는 자신의 CPU 기능(AVX, GPU 모델), 커널 기능(특정 syscall, cgroup 버전), 장치 존재 여부를 라벨이나 NodeFeature CRD로 선언한다. Pod는 nodeSelector, nodeAffinity, device taint로 이를 요구한다. NFD(Node Feature Discovery) 같은 DaemonSet이 노드를 조사해 라벨을 자동 부착한다. 수동 라벨링 없이 하드웨어 특성 기반 스케줄링이 가능해진다.",
+    code: `# Node Feature Discovery (NFD) 라벨
+kubectl get nodes -o \\
+  jsonpath='{.items[*].metadata.labels}' | jq | grep feature
+
+# NFD 라벨 기반 스케줄링
+spec:
+  nodeSelector:
+    feature.node.kubernetes.io/cpu-model.intel: "true"
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: feature.node.kubernetes.io/pci-100.present
+                operator: In
+                values: ["true"]`,
+    lang: "yaml",
+  },
+  {
+    id: "SCH-100",
+    type: "SCHED",
+    chapter: "SCHEDULING & EVICTION",
+    level: "DEEP",
+    nameEn: "SCHEDULER PERFORMANCE TUNING",
+    nameKo: "스케줄러 성능 튜닝",
+    visual: "sched",
+    icon: "PERF",
+    attrs: ["percentageOfNodesToScore", "Profiles"],
+    atk: "스코어링 노드 비율",
+    def: "대규모 클러스터",
+    effect:
+      "percentageOfNodesToScore와 스케줄러 프로필/플러그인 설정으로 대규모 클러스터에서 스케줄링 속도를 조정한다.",
+    flavor: "큰 클러스터일수록 선택이 빨라야.",
+    detail:
+      "기본 스케줄러는 모든 노드를 평가하지만, 노드가 수천 개면 느려진다. percentageOfNodesToScore(예: 50%)를 설정하면 노드의 절반만 평가하고 그중 최적을 선택해 속도를 높인다. KubeSchedulerConfiguration의 profiles로 스케줄러 동작을 커스터마이징하고, pluginConfig로 각 플러그인(InterPodAffinity, NodeAffinity 등)의 가중치를 조정한다. 대규모 클러스터에서 스케줄링 지연(latency)을 제어하는 핵심 도구다.",
+    code: `# KubeSchedulerConfiguration
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+percentageOfNodesToScore: 50
+profiles:
+  - schedulerName: default-scheduler
+    plugins:
+      score:
+        disabled:
+          - name: NodeResourcesLeastAllocated
+        enabled:
+          - name: NodeResourcesMostAllocated
+            weight: 5`,
+    lang: "yaml",
+  },
+  {
+    id: "ST-101",
+    type: "STORAGE",
+    chapter: "STORAGE",
+    level: "DEEP",
+    nameEn: "VOLUME SNAPSHOT CLASSES",
+    nameKo: "볼륨 스냅샷 클래스",
+    visual: "csi",
+    icon: "VSC",
+    attrs: ["CSI", "Policy"],
+    atk: "스냅샷 provisioner",
+    def: "deletionPolicy",
+    effect:
+      "VolumeSnapshotClass는 CSI 드라이버의 스냅샷 provisioner와 파라미터, deletionPolicy(Retain/Delete)를 정의한다.",
+    flavor: "스냅샷도 스토리지 클래스처럼.",
+    detail:
+      "StorageClass가 PV 프로비저닝을 정의하듯, VolumeSnapshotClass는 VolumeSnapshotContent의 프로비저닝을 정의한다. driver 필드로 CSI 드라이버를 지정하고, parameters로 백엔드 스냅샷 옵션(예: EBS snapshot type)을 전달한다. deletionPolicy가 Delete면 VolumeSnapshot이 삭제될 때 백엔드 스냅샷도 제거되고, Retain이면 백엔드 스냅샷을 수동으로 관리한다.",
+    code: `# VolumeSnapshotClass 정의
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: ebs-snap
+driver: ebs.csi.aws.com
+deletionPolicy: Delete  # Retain도 가능
+parameters:
+  encrypted: "true"
+  type: snapshot
+
+# 스냅샷에서 PVC 복원
+apiVersion: v1
+kind: PersistentVolumeClaim
+spec:
+  dataSource:
+    kind: VolumeSnapshot
+    name: db-snap
+    apiGroup: snapshot.storage.k8s.io`,
+    lang: "yaml",
+  },
+  {
+    id: "ST-102",
+    type: "STORAGE",
+    chapter: "STORAGE",
+    level: "DEEP",
+    nameEn: "VOLUME ATTRIBUTES CLASSES",
+    nameKo: "볼륨 속성 클래스",
+    visual: "csi",
+    icon: "VAC",
+    attrs: ["Mutable", "Attributes"],
+    atk: "볼륨 속성 변경",
+    def: "재바인딩 없이",
+    effect:
+      "VolumeAttributesClass는 기존 PV의 속성(IOPS, throughput, 압축 등)을 재바인딩 없이 동적으로 변경한다.",
+    flavor: "볼륨의 설정을 살아 있는 동안 바꾼다.",
+    detail:
+      "기존에는 PV 속성을 바꾸려면 재생성이 필요했다. VolumeAttributesClass는 CSI 드라이버가 지원하는 속성(IOPS, throughput, 암호화 여부, 압축)을 기존 PV에 적용할 수 있게 한다. VolumeAttributesClass와 PV를 연결하고, 변경사항을 controller가 백엔드에 반영한다. 다운타임 없이 성능 프로파일을 조정할 수 있어, 워크로드 패턴 변화에 대응하기 좋다.",
+    code: `# VolumeAttributesClass 정의
+apiVersion: storage.k8s.io/v1beta1
+kind: VolumeAttributesClass
+metadata:
+  name: fast-ssd
+driverName: ebs.csi.aws.com
+parameters:
+  type: gp3
+  iops: "6000"
+  throughput: "500"
+
+# PV에 적용
+# spec:
+#   volumeAttributesClassName: fast-ssd`,
+    lang: "yaml",
+  },
+  {
+    id: "ST-103",
+    type: "STORAGE",
+    chapter: "STORAGE",
+    level: "DEEP",
+    nameEn: "STORAGE CAPACITY",
+    nameKo: "스토리지 용량 추적",
+    visual: "pv",
+    icon: "CAP",
+    attrs: ["CSIStorageCapacity", "Scheduling"],
+    atk: "노드별 남은 용량",
+    def: "스케줄링 가시성",
+    effect:
+      "CSIStorageCapacity 리소스는 노드/토폴로지별 남은 스토리지 용량을 노출해, 스케줄러가 용량 부족 노드를 배제한다.",
+    flavor: "빈 공간을 보고 결정한다.",
+    detail:
+      "과거에는 스케줄러가 노드의 남은 스토리지 용량을 알 수 없어, PVC가 달성 불가능한 노드에 스케줄되는 문제가 있었다. CSI 드라이버가 CSIStorageCapacity 리소스로 토폴로지(노드/영역)별 가용 용량을 노출하면, 스케줄러가 이를 참고해 용량이 충분한 노드만 후보로 삼는다. WaitForFirstConsumer 모드에서 특히 유용하다.",
+    code: `# CSIStorageCapacity 확인
+kubectl get csistoragecapacity -A
+
+# 노드별 용량
+kubectl get csistoragecapacity -o \\
+  jsonpath='{range .items[*]}{.nodeTopology}{" "}{.capacity}{"\\n"}{end}'
+
+# StorageClass와 연관된 용량
+kubectl describe storageclass fast | grep -A3 CSIStorageCapacity`,
+    lang: "bash",
+  },
+  {
+    id: "ST-104",
+    type: "STORAGE",
+    chapter: "STORAGE",
+    level: "DEEP",
+    nameEn: "NODE-SPECIFIC VOLUME LIMITS",
+    nameKo: "노드별 볼륨 한도",
+    visual: "pv",
+    icon: "LIM",
+    attrs: ["Max", "attachLimit"],
+    atk: "노드당 최대 볼륨",
+    def: "CSI attach 제한",
+    effect:
+      "노드는 attach 가능한 볼륨 수에 한계가 있고, kubelet/스케줄러가 이를 추적해 초과 스케줄을 방지한다.",
+    flavor: "한 노드에 꽂을 수 있는 디스크는 정해져 있다.",
+    detail:
+      "클라우드별로 노드에 attach 가능한 볼륨 수가 다르다(AWS EBS 25/28, GCE 127, Azure 16 등). CSI 드라이버가 maxAttachLimit를 보고하면, 스케줄러가 노드별로 이미 연결된 볼륨 수를 추적해 초과하는 Pod 스케줄을 거부한다. 노드 어노테이션에 volumeAttachments 수가 기록되고, kubelet이 실제 attach/detach를 수행한다. 제한을 초과하면 Pod가 FailedScheduling 상태로 남는다.",
+    code: `# 노드의 볼륨 attach 수
+kubectl get volumeattachments -o \\
+  jsonpath='{range .items[*]}{.spec.nodeName}{"\\n"}{end}' | sort | uniq -c
+
+# 노드별 한도 확인
+kubectl describe node worker-1 | grep -A5 Allocatable
+
+# CSI 드라이버의 maxAttachLimit
+kubectl get csidriver -o \\
+  jsonpath='{range .items[*]}{.metadata.name}{" "}{.spec.attachRequired}{"\\n"}{end}'`,
+    lang: "bash",
+  },
+  {
+    id: "ST-105",
+    type: "STORAGE",
+    chapter: "STORAGE",
+    level: "DEEP",
+    nameEn: "LOCAL EPHEMERAL STORAGE",
+    nameKo: "로컬 에피머럴 스토리지",
+    visual: "qos",
+    icon: "LES",
+    attrs: ["ephemeral-storage", "Eviction"],
+    atk: "노드 디스크 용량",
+    def: "임계 퇴거",
+    effect:
+      "로컬 에피머럴 스토리지는 Pod의 emptyDir, 컨테이너 로그, 이미지 레이어가 사용하는 노드 디스크를 추적하고 한계 초과 시 퇴거한다.",
+    flavor: "임시 공간에도 한계가 있다.",
+    detail:
+      "emptyDir, 컨테이너 overlayfs, 로그, 이미지 레이어는 노드의 로컬 디스크를 사용한다. Pod에 ephemeral-storage requests/limits를 지정하면 kubelet이 사용량을 추적하고, limit 초과 시 Pod를 퇴거시킨다. 노드 전체 디스크가 부족해지면 eviction-hard(nodefs.available, nodefs.inodesFree) 임계값에 따라 BestEffort/Burstable Pod를 퇴거한다. 컨테이너 크래시 로그나 캐시가 디스크를 가득 채우는 것을 방지한다.",
+    code: `# ephemeral-storage 제한
+resources:
+  requests:
+    ephemeral-storage: "1Gi"
+  limits:
+    ephemeral-storage: "2Gi"
+
+# 노드의 임시 스토리지 상태
+kubectl describe node worker-1 | grep -A8 "Allocated resources"
+
+# emptyDir 사용량 (Pod 내부)
+kubectl exec web -- du -sh /tmp`,
+    lang: "yaml",
+  },
+  {
+    id: "NET-106",
+    type: "NET",
+    chapter: "SERVICES & NETWORKING",
+    level: "DEEP",
+    nameEn: "DNS FOR PODS",
+    nameKo: "파드 DNS",
+    visual: "svc",
+    icon: "PDNS",
+    attrs: ["A/AAAA", "hostname"],
+    atk: "Pod 개별 DNS",
+    def: "Headless Service",
+    effect:
+      "Pod는 자체 IP로 A/AAAA 레코드를 갖고, hostname/subdomain을 지정하면 개별 DNS 이름으로 접근할 수 있다.",
+    flavor: "파드마다 이름표.",
+    detail:
+      "기본적으로 Pod는 <pod-ip-dashed>.<ns>.pod.cluster.local 형태의 DNS 레코드를 갖는다(예: 10-244-1-5.default.pod.cluster.local). hostname과 subdomain을 지정하고 같은 이름의 Headless Service가 있으면 <hostname>.<subdomain>.<ns>.svc.cluster.local로 접근 가능하다. StatefulSet Pod는 <pod-name>.<service>.<ns> 형태로 자동 DNS를 받아, 개별 인스턴스를 이름으로 호출할 수 있다.",
+    code: `# Pod DNS 확인
+kubectl exec -it debug -- \\
+  nslookup 10-244-1-5.default.pod.cluster.local
+
+# StatefulSet Pod 개별 DNS
+kubectl exec -it debug -- \\
+  nslookup db-0.db.default.svc.cluster.local
+
+# Pod의 DNS 정책
+kubectl get pod web -o \\
+  jsonpath='{.spec.dnsPolicy}'
+# ClusterFirst / ClusterFirstWithHostNet / None`,
+    lang: "bash",
+  },
+  {
+    id: "NET-107",
+    type: "NET",
+    chapter: "SERVICES & NETWORKING",
+    level: "DEEP",
+    nameEn: "INGRESS CONTROLLERS",
+    nameKo: "인그레스 컨트롤러",
+    visual: "svc",
+    icon: "IC",
+    attrs: ["L7", "Implementation"],
+    atk: "Ingress 규칙 실행",
+    def: "벤더별 구현",
+    effect:
+      "Ingress Controller는 Ingress 규칙을 읽어 실제 L7 트래픽을 처리하는 벤더별 구현체(NGINX, Traefik, ALB 등)다.",
+    flavor: "규칙은 정의하고, 컨트롤러는 실행한다.",
+    detail:
+      "Ingress 리소스 자체는 규칙만 정의할 뿐 트래픽을 처리하지 않는다. Ingress Controller가 클러스터에 배포되어 Ingress를 watch하고, 실제 로드밸런서/프록시(NGINX, Traefik, HAProxy, 클라우드 ALB/NLB)의 설정을 동적으로 업데이트한다. ingressClassName으로 어떤 컨트롤러가 처리할지 지정한다. 클라우드별로 전용 controller(ALB Ingress Controller, GCE Ingress)가 있고, 벤더 중립적으로는 ingress-nginx가 널리 쓰인다.",
+    code: `# IngressClass 정의
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: nginx
+spec:
+  controller: k8s.io/ingress-nginx
+
+# 배포된 Ingress Controller
+kubectl get deploy -n ingress-nginx
+
+# Ingress와 Class 연결
+# spec:
+#   ingressClassName: nginx`,
+    lang: "yaml",
+  },
+  {
+    id: "NET-108",
+    type: "NET",
+    chapter: "SERVICES & NETWORKING",
+    level: "DEEP",
+    nameEn: "NETWORK PLUGINS (CNI)",
+    nameKo: "네트워크 플러그인 (CNI)",
+    visual: "cluster",
+    icon: "CNI",
+    attrs: ["Pod network", "CNI spec"],
+    atk: "Pod IP 할당",
+    def: "오버레이/언더레이",
+    effect:
+      "CNI 플러그인은 Pod에 IP를 할당하고 노드 간 Pod 통신을 위한 네트워크(오버레이/BGP/VXLAN)를 구성한다.",
+    flavor: "파드 네트워크의 배관공.",
+    detail:
+      "CNI(Container Network Interface)는 kubelet이 Pod 생성 시 호출하는 표준 인터페이스다. Calico, Cilium, Flannel, Weave, Antrea 등이 있고, 각각 Pod IP 할당, 노드 간 라우팅, NetworkPolicy 적용을 담당한다. 오버레이(VXLAN, IP-in-IP) 방식과 언더레이(BGP, 클라우드 VPC 네이티브) 방식이 있다. NetworkPolicy 지원 여부, eBPF 성능, 클라우드 통합 등이 플러그인 선택 기준이다.",
+    code: `# 노드의 CNI 플러그인 확인
+ls /etc/cni/net.d/
+
+# 설치된 CNI
+kubectl get pods -n kube-system | grep -E "calico|cilium|flannel|weave"
+
+# 노드의 Pod CIDR
+kubectl get node worker-1 -o \\
+  jsonpath='{.spec.podCIDR}'
+
+# Cilium 상태 (예시)
+kubectl exec -n kube-system ds/cilium -- cilium status`,
+    lang: "bash",
+  },
+  {
+    id: "NET-109",
+    type: "NET",
+    chapter: "SERVICES & NETWORKING",
+    level: "DEEP",
+    nameEn: "WINDOWS NETWORKING",
+    nameKo: "윈도우 네트워킹",
+    visual: "cluster",
+    icon: "WN",
+    attrs: ["Windows", "HostNetwork"],
+    atk: "윈도우 노드 네트워크",
+    def: "제약/차이",
+    effect:
+      "Windows 노드는 리눅스와 네트워킹 모델이 달라, CNI/Service/NetworkPolicy 지원에 차이와 제약이 있다.",
+    flavor: "같은 클러스터, 다른 네트워크 세계.",
+    detail:
+      "Windows 컨테이너는 리눅스 네임스페이스 대신 Windows container isolation을 사용한다. 지원되는 CNI는 제한적(Azure-CNI, Antrea, Calico), 오버레이는 일부만 지원된다. Service ClusterIP, NodePort, HostPort 동작에 차이가 있고, NetworkPolicy는 플러그인에 따라 지원 범위가 다르다. Windows 노드에는 별도 테인트가 있어, 리눅스 Pod가 스케줄되지 않도록 nodeSelector로 운영체제를 명시해야 한다.",
+    code: `# Windows 노드 식별
+kubectl get nodes -l kubernetes.io/os=windows
+
+# Windows Pod 스케줄링
+spec:
+  nodeSelector:
+    kubernetes.io/os: windows
+  containers:
+    - name: iis
+      image: mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2022
+
+# Windows 노드 테인트 확인
+kubectl describe node win-1 | grep -A5 Taints`,
+    lang: "yaml",
+  },
+  {
+    id: "NET-110",
+    type: "NET",
+    chapter: "SERVICES & NETWORKING",
+    level: "DEEP",
+    nameEn: "SERVICE FOR WINDOWS",
+    nameKo: "윈도우 서비스",
+    visual: "svc",
+    icon: "WSVC",
+    attrs: ["Windows", "Compatibility"],
+    atk: "윈도우 호환 서비스",
+    def: "제한된 기능",
+    effect:
+      "Windows Pod를 위한 Service는 ClusterIP/NodePort/LoadBalancer를 지원하지만, 일부 기능(hostNetwork, SCTP)은 제약이 있다.",
+    flavor: "윈도우에 맞춘 서비스 규칙.",
+    detail:
+      "Windows Pod도 Service로 노출할 수 있지만, 리눅스와 동일하지는 않다. hostNetwork는 지원되지 않고, SCTP는 제한적이며, Session Affinity 동작에 차이가 있다. kube-proxy는 Windows 버전(HNS 네트워크)으로 동작한다. 클라우드에서 LoadBalancer 서비스로 Windows 노드의 IIS/ASP.NET 앱을 외부에 노출할 수 있다. 리눅스/윈도우 혼합 클러스터에서는 서비스 셀렉터로 OS를 구분하는 것이 일반적이다.",
+    code: `# Windows Pod를 노출하는 Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: iis
+spec:
+  selector:
+    app: iis
+    kubernetes.io/os: windows
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 80
+
+# OS별로 분리된 서비스
+kubectl get svc -l kubernetes.io/os=windows`,
+    lang: "yaml",
+  },
+  {
+    id: "CFG-111",
+    type: "CONFIG",
+    chapter: "CONFIGURATION",
+    level: "DEEP",
+    nameEn: "POD-LEVEL RESOURCES",
+    nameKo: "파드 수준 자원",
+    visual: "qos",
+    icon: "PLR",
+    attrs: ["Pod-scoped", "Aggregate"],
+    atk: "Pod 전체 자원 합",
+    def: "컨테이너별 분리",
+    effect:
+      "Pod-level resources는 컨테이너별이 아닌 Pod 전체의 CPU/메모리 requests/limits를 지정해, Pod 단위로 자원을 보장한다.",
+    flavor: "컨테이너가 아닌 파드에 자원을 약속.",
+    detail:
+      "기존에는 resources를 컨테이너마다 지정해야 했다. Pod-level resources는 spec.resources로 Pod 전체의 requests/limits를 한 번에 지정한다. 사이드카(init restartPolicy: Always)가 있는 Pod에서 특히 유용하다 — 사이드카 자원을 앱 컨테이너 자원과 공유할 수 있어, 컨테이너별로 따로 예약하지 않아도 된다. QoS 계산도 Pod 단위로 통합된다.",
+    code: `# Pod-level resources (feature gate)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web
+spec:
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+  containers:
+    - name: app
+      image: app:1.0
+    - name: envoy
+      image: envoy:v1.30
+      # 컨테이너별 resources 생략 가능`,
+    lang: "yaml",
+  },
+  {
+    id: "CFG-112",
+    type: "CONFIG",
+    chapter: "POLICIES",
+    level: "DEEP",
+    nameEn: "PROCESS ID LIMITS",
+    nameKo: "프로세스 ID 한도",
+    visual: "qos",
+    icon: "PID",
+    attrs: ["pid", "Per-pod"],
+    atk: "Pod당 PID 한계",
+    def: "노드 보호",
+    effect:
+      "PID Limits는 Pod가 생성할 수 있는 프로세스 수를 제한해, 한 Pod의 fork 폭주가 노드 전체를 마비시키는 것을 막는다.",
+    flavor: "프로세스도 한도가 있다.",
+    detail:
+      "Linux는 PID를 공유 자원이므로, 한 컨테이너가 fork 폭탄을 일으키면 노드의 모든 PID가 고갈된다. --pod-pids-limit 기본값(보통 4096)이나 cgroup pids.max로 Pod당 최대 프로세스 수를 제한한다. 노드 수준에서도 pid.max가 있고, kubelet의 PodPidsLimit 설정으로 클러스터 전체 정책을 적용할 수 있다. 자원 고갈로 인한 노드 장애를 예방하는 기본 보호 장치다.",
+    code: `# Pod당 PID 제한 (kubelet)
+# /var/lib/kubelet/config.yaml
+# podPidsLimit: 4096
+
+# Pod의 현재 PID 수
+kubectl exec web -- sh -c "ls /proc | grep -E '^[0-9]+$' | wc -l"
+
+# cgroup PID 제한
+cat /sys/fs/cgroup/kubepods/pod<uid>/pids.max
+
+# 노드의 PID 사용량
+kubectl describe node worker-1 | grep -A3 PIDs`,
+    lang: "bash",
+  },
+  {
+    id: "CFG-113",
+    type: "CONFIG",
+    chapter: "CLUSTER ADMINISTRATION",
+    level: "DEEP",
+    nameEn: "NODE SHUTDOWNS",
+    nameKo: "노드 종료 처리",
+    visual: "qos",
+    icon: "SHUT",
+    attrs: ["Graceful", "Detection"],
+    atk: "종료 감지 → 퇴거",
+    def: "유예 후 퇴거",
+    effect:
+      "Node Shutdown Manager는 노드 종료/재부팅을 감지해, kubelet이 Pod를 graceful하게 퇴거시키고 상태를 API에 알린다.",
+    flavor: "끄기 전에 인사하고.",
+    detail:
+      "노드가 갑자기 전원 꺼지면 Pod는 단순히 사라지고, API 서버는 node.kubernetes.io/unreachable 테인트를 40초 후에 추가한다. Graceful Node Shutdown은 kubelet이 systemd의 종료 이벤트를 감지해, terminationGracePeriodSeconds 내에 Pod를 정상 종료시키고, Shutdown 메시지를 기록한다. 종료 우선순위(priorityClass)에 따라 중요 Pod를 먼저/나중에 종료한다. 클라우드 인스턴스 종료/스팟 회수 시나리오에 유용하다.",
+    code: `# 노드 종료 이벤트 확인
+kubectl get events -A \\
+  --field-selector reason=NodeShutdown
+
+# 노드 상태의 종료 마커
+kubectl get node worker-1 -o \\
+  jsonpath='{.status.conditions}' | jq | grep -A3 Shutdown
+
+# kubelet graceful shutdown 설정
+# /var/lib/kubelet/config.yaml
+# shutdownGracePeriod: 30s
+# shutdownGracePeriodCriticalPods: 10s`,
+    lang: "bash",
+  },
+  {
+    id: "CFG-114",
+    type: "CONFIG",
+    chapter: "CLUSTER ADMINISTRATION",
+    level: "DEEP",
+    nameEn: "SWAP MEMORY MANAGEMENT",
+    nameKo: "스왑 메모리 관리",
+    visual: "qos",
+    icon: "SWAP",
+    attrs: ["swap", "Limited"],
+    atk: "Pod당 스왑 한도",
+    def: "성능 보호",
+    effect:
+      "Kubernetes 1.22+에서 swap 지원이 베타로, 노드의 swap을 Pod/컨테이너별로 제한해 메모리 압박 시 디스크 사용을 허용한다.",
+    flavor: "메모리가 부족하면 디스크로.",
+    detail:
+      "과거에는 K8s 노드에서 swap이 비활성화되어야 했다. 1.22+에서 swap 지원이 도입되어, 노드 swap을 켜되 Pod/컨테이너별 swap 사용량을 cgroup v2로 제한할 수 있다. swap을 쓰면 메모리 압박 시 디스크로 페이지를 옮겨 OOM을 지연하지만, 디스크 I/O로 성능 저하가 발생할 수 있다. BestEffort/Burstable Pod는 swap을 쓸 수 있고, Guaranteed는 swap을 0으로 제한해 예측 가능한 성능을 유지한다.",
+    code: `# kubelet swap 설정
+# /var/lib/kubelet/config.yaml
+# failSwapOn: false
+# memorySwap:
+#   swapBehavior: LimitedSwap  # UnlimitedSwap도 가능
+
+# 노드의 swap 상태
+kubectl describe node worker-1 | grep -i swap
+
+# 컨테이너의 swap 사용량
+kubectl exec web -- cat /sys/fs/cgroup/memory.swap.current`,
+    lang: "bash",
+  },
+  {
+    id: "CFG-115",
+    type: "CONFIG",
+    chapter: "CLUSTER ADMINISTRATION",
+    level: "DEEP",
+    nameEn: "NODE AUTOSCALING",
+    nameKo: "노드 오토스케일링",
+    visual: "hpa",
+    icon: "CA",
+    attrs: ["Cluster", "Pending"],
+    atk: "Pending Pod → 노드 추가",
+    def: "여유 → 노드 제거",
+    effect:
+      "Cluster Autoscaler는 Pending Pod가 있으면 노드를 추가하고, 노드 활용도가 낮으면 노드를 제거한다.",
+    flavor: "필요하면 늘리고, 남으면 줄인다.",
+    detail:
+      "Cluster Autoscaler는 스케줄러가 '자원 부족'으로 Pending인 Pod를 감지하면, 클라우드 API로 새 노드를 프로비저닝한다. 반대로 노드 활용도가 임계값(보통 50%) 이하로 떨어지고, 그 노드의 Pod를 다른 노드로 옮길 수 있으면 노드를 제거한다. 노드 그룹(min/max)별로 동작하고, 클라우드 provider(MIG, ASG, VMSS)와 통합된다. PodDisruptionBudget과 Pod anti-affinity가 스케일인을 방해할 수 있어 주의가 필요하다.",
+    code: `# Pending Pod (노드 부족)
+kubectl get pods -A \\
+  --field-selector=status.phase=Pending
+
+# 노드 그룹 상태 (클라우드별)
+# AWS: asg, GCP: mig, Azure: vmss
+
+# Cluster Autoscaler 로그
+kubectl logs -n kube-system \\
+  -l app=cluster-autoscaler --tail=30
+
+# 노드 추가/제거 이벤트
+kubectl get events -A \\
+  --field-selector reason=ScaleDown`,
+    lang: "bash",
+  },
+  {
+    id: "SEC-116",
+    type: "SECURITY",
+    chapter: "SECURITY",
+    level: "DEEP",
+    nameEn: "POD SECURITY ADMISSION",
+    nameKo: "파드 보안 어드미션 (PSA)",
+    visual: "webhook",
+    icon: "PSA",
+    attrs: ["Enforce", "Audit", "Warn"],
+    atk: "네임스페이스 보안 강제",
+    def: "내장 어드미션",
+    effect:
+      "PodSecurity Admission은 PodSecurityPolicy를 대체하는 내장 어드미션으로, 네임스페이스 라벨로 Pod 보안 정책을 강제/감사/경고한다.",
+    flavor: "내장된 보안 문지기.",
+    detail:
+      "PSA는 K8s 1.25에서 GA된 내장 어드미션 컨트롤러다. 네임스페이스에 pod-security.kubernetes.io/{enforce,audit,warn} 라벨로 privileged/baseline/restricted 프로파일을 지정한다. enforce는 위반 Pod를 거부, audit은 감사 로그만, warn은 사용자에게 경고만 한다. 세 모드를 조합해 점진적 도입이 가능하다 — 먼저 warn으로 알리고, audit으로 관측하고, 마지막에 enforce로 강제한다. 별도 webhook 서버 없이 API 서버에 내장되어 있다.",
+    code: `# 네임스페이스 PSA 라벨 (3단계)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prod
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: latest
+
+# 위반 사례 점검
+kubectl label ns staging \\
+  pod-security.kubernetes.io/enforce=baseline \\
+  --dry-run=server`,
+    lang: "yaml",
+  },
+  {
+    id: "SEC-117",
+    type: "SECURITY",
+    chapter: "SECURITY",
+    level: "DEEP",
+    nameEn: "RBAC GOOD PRACTICES",
+    nameKo: "RBAC 운영 권장 사항",
+    visual: "rbac",
+    icon: "RBAC",
+    attrs: ["Least-privilege", "Audit"],
+    atk: "최소 권한 원칙",
+    def: "정기 감사",
+    effect:
+      "RBAC 권장 사항: 최소 권한, 네임스페이스 scoped Role 우선, default SA 제한, 정기 권한 감사로 권한 확산을 방지한다.",
+    flavor: "필요한 만큼만, 그 이상은 위험.",
+    detail:
+      "권장: (1) ClusterRole/ClusterRoleBinding 대신 네임스페이스 Role/RoleBinding 우선, (2) wildcard(*) 권한 피하기, (3) default ServiceAccount의 자동 토큰 마운트 비화(automountServiceAccountToken: false), (4) RBAC 감사(kubectl auth can-i --list)로 과도한 권한 탐지, (5) 사용자별 인증서/토큰 정기 로테이션, (6) system:masters 그룹 사용 최소화(클러스터 관리자 전용). 권한 크리프(creep)를 막는 것이 핵심이다.",
+    code: `# SA 자동 토큰 마운트 비활성화
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: app-sa
+automountServiceAccountToken: false
+
+# 권한 감사
+kubectl auth can-i --list -n prod \\
+  --as=system:serviceaccount:prod:app-sa
+
+# 과도한 권한 탐지
+kubectl get rolebindings,clusterrolebindings -A \\
+  -o json | jq '.items[] | select(.roleRef.name=="cluster-admin")'`,
+    lang: "yaml",
+  },
+  {
+    id: "SEC-118",
+    type: "SECURITY",
+    chapter: "SECURITY",
+    level: "DEEP",
+    nameEn: "API SERVER BYPASS RISKS",
+    nameKo: "API 서버 우회 위험",
+    visual: "webhook",
+    icon: "BYP",
+    attrs: ["Direct", "Bypass"],
+    atk: "API 외부 직접 접근",
+    def: "인가/감사 사각",
+    effect:
+      "API Server Bypass Risk는 kubelet/etcd/CRI 같은 컴포넌트에 API 서버를 거치지 않고 직접 접근할 때 발생하는 보안 사각을 의미한다.",
+    flavor: "정문 말고 뒷문을 조심하라.",
+    detail:
+      "RBAC/어드미션은 API 서버를 통한 요청에만 적용된다. (1) kubelet 10250 포트에 직접 접근하면 API 인가를 우회할 수 있어, 인증서/인가(Webhook)로 kubelet을 보호해야 한다. (2) etcd에 직접 접근하면 모든 클러스터 상태(비밀 포함)가 노출된다. (3) 컨테이너 런타임 소켓에 접근하면 노드 제어가 가능하다. 이런 '뒷문'을 모두 잠그고 감사해야 API 서버 중심 보안이 유효하다.",
+    code: `# kubelet 인증/인가 설정
+# /var/lib/kubelet/config.yaml
+# authentication:
+#   anonymous:
+#     enabled: false
+# authorization:
+#   mode: Webhook  # API 서버 인가 사용
+
+# etcd 접근 제한 (mTLS)
+ETCDCTL_API=3 etcdctl \\
+  --endpoints=https://127.0.0.1:2379 \\
+  --cacert=ca.crt --cert=etcd.crt --key=etcd.key \\
+  endpoint health
+
+# 노드의 런타임 소켓 보호
+ls -l /run/containerd/containerd.sock  # 0600 권장`,
+    lang: "bash",
+  },
+  {
+    id: "EXT-119",
+    type: "SECURITY",
+    chapter: "EXTENDING KUBERNETES",
+    level: "DEEP",
+    nameEn: "OPERATOR PATTERN",
+    nameKo: "오퍼레이터 패턴",
+    visual: "deploy",
+    icon: "OP",
+    attrs: ["CRD", "Reconcile"],
+    atk: "도메인 지식 자동화",
+    def: "커스텀 컨트롤러",
+    effect:
+      "Operator는 CRD로 정의된 도메인 리소스(MySQL, Kafka 등)를 관리하는 커스텀 컨트롤러로, 전문가의 운영 지식을 코드로 자동화한다.",
+    flavor: "DBA의 지식을 코드로.",
+    detail:
+      "Operator는 CRD(CustomResourceDefinition)로 새 리소스 종류(예: MySQLCluster)를 정의하고, 컨트롤 루프로 desired state를 관찰·조정한다. 백업, 스케일, 장애 복구, 버전 업그레이드 같은 운영 작업을 자동화한다. 예: Prometheus Operator, Strimzi(Kafka), CloudNativePG(PostgreSQL). controller-runtime/kubebuilder/Operator SDK로 개발하며, CRD + 컨트롤러 + RBAC를 하나의 패키지로 배포한다.",
+    code: `# CRD 정의
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: mysqlclusters.example.com
+spec:
+  group: example.com
+  names:
+    kind: MySQLCluster
+    plural: mysqlclusters
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                replicas:
+                  type: integer
+                version:
+                  type: string`,
+    lang: "yaml",
+  },
+  {
+    id: "EXT-120",
+    type: "SECURITY",
+    chapter: "EXTENDING KUBERNETES",
+    level: "DEEP",
+    nameEn: "CUSTOM RESOURCES",
+    nameKo: "커스텀 리소스 (CRD)",
+    visual: "object",
+    icon: "CRD",
+    attrs: ["Schema", "API extension"],
+    atk: "새 리소스 종류",
+    def: "OpenAPI v3 스키마",
+    effect:
+      "CustomResourceDefinition은 쿠버네티스 API에 새 리소스 종류를 추가해, kubectl과 API로 관리할 수 있게 한다.",
+    flavor: "API를 스스로 확장한다.",
+    detail:
+      "CRD는 쿠버네티스 API를 확장하는 표준 방법이다. group/version/kind로 새 리소스를 정의하고, OpenAPI v3 스키마로 spec/status 구조를 검증한다. 복수 버전(v1alpha1, v1beta1, v1)을 지원하고 변환 웹훅으로 마이그레이션한다. 카테고리(labels, categories)로 kubectl get all에 포함시킬 수 있다. 컨트롤러가 없으면 데이터만 저장되고, Operator(컨트롤러)를 결합해야 실제 동작이 일어난다.",
+    code: `# CRD로 새 리소스 생성
+apiVersion: example.com/v1
+kind: MySQLCluster
+metadata:
+  name: prod-db
+spec:
+  replicas: 3
+  version: "8.0"
+  storage: 100Gi
+
+# CRD 기반 리소스 관리
+kubectl get mysqlclusters
+kubectl describe mysqlcluster prod-db
+kubectl apply -f mysql.yaml  # 선언적 관리`,
+    lang: "yaml",
+  },
 ];
