@@ -1,9 +1,12 @@
 // Kafka Card Deck Controller — Mobile TCG App
 
 (function () {
+  const Standard = window.DeckStandard;
+  const cards = Standard.normalizeCards(KAFKA_CARDS);
+  const deckId = "kafka";
   let currentIndex = 0;
   let isFlipped = false;
-  const collectedIds = new Set([KAFKA_CARDS[0].id]);
+  let collectedIds = new Set();
 
   // DOM Elements
   const cardEl = document.getElementById("card");
@@ -23,34 +26,48 @@
   const pathScroll = document.getElementById("path-scroll");
 
   function init() {
+    loadProgress();
     renderCard(currentIndex);
     setupEvents();
     renderDex("ALL");
     renderPath();
   }
 
+  function loadProgress() {
+    const saved = Standard.loadState(deckId);
+    if (Number.isInteger(saved?.index)) {
+      currentIndex = Math.max(0, Math.min(cards.length - 1, saved.index));
+    }
+    const seen = saved?.seen ?? saved?.owned ?? saved?.reviewed;
+    if (Array.isArray(seen)) collectedIds = new Set(seen);
+  }
+
+  function saveProgress() {
+    Standard.saveState(deckId, { index: currentIndex, seen: [...collectedIds] });
+  }
+
   function renderCard(index) {
-    const data = KAFKA_CARDS[index];
+    const data = cards[index];
     collectedIds.add(data.id);
     isFlipped = false;
     cardEl.classList.remove("flipped");
     cardEl.setAttribute("data-rarity", data.rarity);
 
     // Progress Pill
-    progressEl.innerHTML = `<b>${index + 1}</b> / ${KAFKA_CARDS.length}`;
+    progressEl.innerHTML = `<b>${index + 1}</b> / ${cards.length}`;
 
     // Front Face Render
     frontFace.innerHTML = `
       <div class="card-header">
         <span class="rarity-badge" data-r="${data.rarity}">★ ${data.rarity}</span>
-        <span class="card-id">#${data.num} • ${data.id}</span>
+        <span class="card-id">#${escapeHtml(data.number)} • ${escapeHtml(data.id)}</span>
       </div>
       <div class="art">
         <div class="diagram-flow">
           ${data.diagramNodes
             .map(
               (n, i) => `
-            <div class="d-node ${n.type}">${n.name}</div>
+            <div class="d-node ${n.type === "highlight" ? "highlight" : ""}">${escapeHtml(n.name)}</div>
             ${i < data.diagramNodes.length - 1 ? '<span class="d-arrow">➔</span>' : ""}
           `
             )
@@ -58,55 +75,58 @@
         </div>
       </div>
       <div class="title-block">
-        <h1>${data.titleEn}</h1>
-        <div class="ko">${data.titleKo}</div>
+        <h1>${escapeHtml(data.nameEn)}</h1>
+        <div class="ko">${escapeHtml(data.nameKo)}</div>
         <div class="tags">
-          ${data.tags.map((t) => `<span class="tag">${t}</span>`).join("")}
+          <span class="tag">${escapeHtml(data.type)}</span>
+          ${data.attrs.map((t) => `<span class="tag">${escapeHtml(t)}</span>`).join("")}
         </div>
       </div>
       <div class="stats">
-        <div class="stat"><label>ATK</label><span>${data.stats.atk}</span></div>
-        <div class="stat"><label>DEF</label><span>${data.stats.def}</span></div>
+        <div class="stat"><label>ATK</label><span>${escapeHtml(data.atk)}</span></div>
+        <div class="stat"><label>DEF</label><span>${escapeHtml(data.def)}</span></div>
       </div>
       <div class="concept-box">
         <div class="label">CONCEPT</div>
-        <p>${data.concept}</p>
+        <p>${escapeHtml(data.effect)}</p>
       </div>
-      <div class="quote">${data.quote}</div>
-      <div class="hint-tap">👆 터치하여 상세 및 실전 코드 보기</div>
+      <div class="quote">「${escapeHtml(data.flavor)}」</div>
+      <div class="hint-tap">탭 → 상세 + 코드</div>
     `;
 
     // Back Face Render
     backFace.innerHTML = `
       <div class="back-inner">
         <div class="back-header">
-          <h2>${data.titleKo}</h2>
-          ${data.docUrl ? `<a href="${data.docUrl}" target="_blank" rel="noopener" class="doc-link" onclick="event.stopPropagation();">📖 공식 문서 ↗</a>` : `<span class="badge-lang">KAFKA v4.3</span>`}
+          <h2>${escapeHtml(data.nameKo)}</h2>
+          <span class="badge-lang">${escapeHtml(data.lang || "Kafka")}</span>
         </div>
         <div class="detail-box">
-          <div class="label">OFFICIAL DETAIL</div>
-          <p>${data.detail}</p>
+          <div class="label">DETAIL</div>
+          <p>${escapeHtml(data.detail)}</p>
         </div>
         <div class="code-box">
           <div class="label">CODE & EXAMPLE</div>
           <pre><code>${escapeHtml(data.code)}</code></pre>
         </div>
-        <div class="hint-tap">👆 터치하여 카드 앞면으로</div>
+        <div class="hint-tap">탭 → 앞면</div>
       </div>
     `;
 
     updateControls();
     updateDexStats();
+    saveProgress();
   }
 
   function updateControls() {
     btnPrev.disabled = currentIndex === 0;
-    btnNext.disabled = currentIndex === KAFKA_CARDS.length - 1;
+    btnNext.disabled = currentIndex === cards.length - 1;
   }
 
   function setupEvents() {
     // Card Flip
-    cardEl.addEventListener("click", () => {
+    cardEl.addEventListener("click", (event) => {
+      if (event.target.closest("button, a, .detail-box, .code-box")) return;
       isFlipped = !isFlipped;
       cardEl.classList.toggle("flipped", isFlipped);
     });
@@ -122,7 +142,7 @@
 
     btnNext.addEventListener("click", (e) => {
       e.stopPropagation();
-      if (currentIndex < KAFKA_CARDS.length - 1) {
+      if (currentIndex < cards.length - 1) {
         currentIndex++;
         renderCard(currentIndex);
       }
@@ -135,40 +155,37 @@
       setTimeout(() => {
         let rand;
         do {
-          rand = Math.floor(Math.random() * KAFKA_CARDS.length);
-        } while (rand === currentIndex && KAFKA_CARDS.length > 1);
+          rand = Math.floor(Math.random() * cards.length);
+        } while (rand === currentIndex && cards.length > 1);
         currentIndex = rand;
         renderCard(currentIndex);
         cardEl.classList.remove("shuffle");
       }, 300);
     });
 
-    // Touch Swiping on Card Stage
-    let touchStartX = 0;
-    let touchEndX = 0;
     const stage = document.getElementById("card-stage");
+    Standard.attachSwipe(stage, {
+      onPrevious: () => {
+        if (currentIndex > 0) renderCard(--currentIndex);
+      },
+      onNext: () => {
+        if (currentIndex < cards.length - 1) renderCard(++currentIndex);
+      },
+    });
 
-    stage.addEventListener("touchstart", (e) => {
-      touchStartX = e.changedTouches[0].screenX;
-    }, { passive: true });
-
-    stage.addEventListener("touchend", (e) => {
-      touchEndX = e.changedTouches[0].screenX;
-      handleSwipe();
-    }, { passive: true });
-
-    function handleSwipe() {
-      const diff = touchEndX - touchStartX;
-      if (Math.abs(diff) > 50) {
-        if (diff < 0 && currentIndex < KAFKA_CARDS.length - 1) {
-          currentIndex++;
-          renderCard(currentIndex);
-        } else if (diff > 0 && currentIndex > 0) {
-          currentIndex--;
-          renderCard(currentIndex);
-        }
+    window.addEventListener("keydown", (event) => {
+      const target = event.target instanceof Element ? event.target : null;
+      const viewerActive = document.getElementById("view-viewer").classList.contains("active");
+      if (!viewerActive || target?.closest("button, a, input, textarea, select")) return;
+      if (event.key === "ArrowLeft" && currentIndex > 0) renderCard(--currentIndex);
+      if (event.key === "ArrowRight" && currentIndex < cards.length - 1) renderCard(++currentIndex);
+      if (event.key === " " || event.key === "Enter") {
+        event.preventDefault();
+        isFlipped = !isFlipped;
+        cardEl.classList.toggle("flipped", isFlipped);
       }
-    }
+      if (event.key.toLowerCase() === "r") btnRandom.click();
+    });
 
     // Tab Navigation
     tabBtns.forEach((btn) => {
@@ -195,17 +212,17 @@
 
   function renderDex(filter) {
     dexGrid.innerHTML = "";
-    KAFKA_CARDS.forEach((card, idx) => {
+    cards.forEach((card, idx) => {
       const isOwned = collectedIds.has(card.id);
       if (filter === "OWNED" && !isOwned) return;
-      if (filter !== "ALL" && filter !== "OWNED" && card.category !== filter) return;
+      if (filter !== "ALL" && filter !== "OWNED" && card.type !== filter) return;
 
       const cell = document.createElement("div");
       cell.className = `dex-cell ${isOwned ? "" : "locked"}`;
       cell.setAttribute("data-r", card.rarity);
       cell.innerHTML = `
-        <div class="d-icon">${card.icon}</div>
-        <div class="d-name">${card.titleKo}</div>
+        <div class="d-icon">${escapeHtml(card.icon)}</div>
+        <div class="d-name">${escapeHtml(card.nameKo)}</div>
         <div class="d-r" style="color: var(--${card.rarity.toLowerCase()})">${card.rarity}</div>
       `;
 
@@ -220,18 +237,18 @@
   }
 
   function updateDexStats() {
-    const rate = Math.round((collectedIds.size / KAFKA_CARDS.length) * 100);
-    collectRate.innerHTML = `<b>${collectedIds.size}</b>/${KAFKA_CARDS.length} (${rate}%)`;
+    const rate = Math.round((collectedIds.size / cards.length) * 100);
+    collectRate.innerHTML = `<b>${collectedIds.size}</b>/${cards.length} (${rate}%)`;
   }
 
   function renderPath() {
-    pathScroll.innerHTML = KAFKA_CARDS.map(
+    pathScroll.innerHTML = cards.map(
       (card, idx) => `
       <div class="path-item">
         <div class="path-idx">${idx + 1}</div>
         <div class="path-card" data-idx="${idx}">
-          <h3>${card.num}. ${card.titleKo}</h3>
-          <p>${card.titleEn} • ${card.stats.atk}</p>
+          <h3>${escapeHtml(card.number)}. ${escapeHtml(card.nameKo)}</h3>
+          <p>${escapeHtml(card.nameEn)} • ${escapeHtml(card.atk)}</p>
         </div>
       </div>
     `
@@ -254,12 +271,7 @@
   }
 
   function escapeHtml(str) {
-    return str
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+    return Standard.escapeHtml(str);
   }
 
   document.addEventListener("DOMContentLoaded", init);

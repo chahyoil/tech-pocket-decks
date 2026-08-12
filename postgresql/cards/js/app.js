@@ -1,6 +1,8 @@
 (() => {
-  const cards = window.POSTGRES_CARDS || [];
-  const storageKey = "postgres-pocket-deck-v3";
+  const Standard = window.DeckStandard;
+  const cards = Standard.normalizeCards(window.POSTGRES_CARDS || []);
+  const deckId = "postgresql";
+  const legacyStorageKeys = ["postgres-pocket-deck-v3"];
   const typeLabels = {
     STARTER: "01 · PostgreSQL 시작하기",
     SQL: "02 · SQL로 데이터 다루기",
@@ -28,32 +30,24 @@
   const toast = $("#toast");
 
   function escapeHtml(value = "") {
-    return String(value).replace(/[&<>"']/g, (char) => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#039;",
-    })[char]);
+    return Standard.escapeHtml(value);
   }
 
   function loadState() {
     try {
-      const saved = JSON.parse(localStorage.getItem(storageKey));
+      const saved = Standard.loadState(deckId, legacyStorageKeys);
       if (Number.isInteger(saved?.index)) {
         state.index = Math.max(0, Math.min(cards.length - 1, saved.index));
       }
-      if (Array.isArray(saved?.reviewed)) state.reviewed = new Set(saved.reviewed);
+      const seen = saved?.seen ?? saved?.reviewed ?? saved?.owned;
+      if (Array.isArray(seen)) state.reviewed = new Set(seen);
     } catch (_) {
       // Local progress must never block the lesson.
     }
   }
 
   function saveState() {
-    localStorage.setItem(
-      storageKey,
-      JSON.stringify({ index: state.index, reviewed: [...state.reviewed] })
-    );
+    Standard.saveState(deckId, { index: state.index, seen: [...state.reviewed] });
   }
 
   function showToast(message) {
@@ -263,19 +257,14 @@
   card.addEventListener("keydown", (event) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
+      event.stopPropagation();
       flipCard();
     }
   });
 
-  let pointerStart = null;
-  $("#card-stage").addEventListener("pointerdown", (event) => { pointerStart = event.clientX; });
-  $("#card-stage").addEventListener("pointerup", (event) => {
-    if (pointerStart === null) return;
-    const distance = event.clientX - pointerStart;
-    pointerStart = null;
-    if (Math.abs(distance) < 60) return;
-    if (distance > 0 && state.index > 0) goTo(state.index - 1);
-    if (distance < 0 && state.index < cards.length - 1) goTo(state.index + 1);
+  Standard.attachSwipe($("#card-stage"), {
+    onPrevious: () => state.index > 0 && goTo(state.index - 1),
+    onNext: () => state.index < cards.length - 1 && goTo(state.index + 1),
   });
 
   $("#prev-button").addEventListener("click", () => goTo(state.index - 1));
@@ -293,6 +282,10 @@
     if (state.view !== "card" || target?.closest("button, a")) return;
     if (event.key === "ArrowLeft") goTo(state.index - 1);
     if (event.key === "ArrowRight") goTo(state.index + 1);
+    if (event.key === " " || event.key === "Enter") {
+      event.preventDefault();
+      flipCard();
+    }
     if (event.key.toLowerCase() === "r") randomCard();
   });
 

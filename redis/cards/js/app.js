@@ -1,7 +1,9 @@
 (() => {
-  const CARDS = window.REDIS_CARDS;
+  const Standard = window.DeckStandard;
+  const CARDS = Standard.normalizeCards(window.REDIS_CARDS);
   const VISUALS = window.REDIS_VISUALS || {};
-  const STORAGE_KEY = "redis-card-deck-v1";
+  const DECK_ID = "redis";
+  const LEGACY_STORAGE_KEYS = ["redis-card-deck-v1"];
   const RARITY_WEIGHT = { N: 40, R: 30, SR: 18, UR: 10, LR: 2 };
 
   const TYPE_ORDER = ["STARTER", "TYPE", "ARCH", "INTERNAL", "OPS", "PROG", "PATTERN"];
@@ -51,18 +53,15 @@
   const btnRandom = $("#btn-random");
 
   function escapeHtml(s) {
-    return String(s)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+    return Standard.escapeHtml(s);
   }
 
   function load() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const data = JSON.parse(raw);
-      if (Array.isArray(data.owned)) state.owned = new Set(data.owned);
+      const data = Standard.loadState(DECK_ID, LEGACY_STORAGE_KEYS);
+      if (!data) return;
+      const seen = data.seen ?? data.owned ?? data.reviewed;
+      if (Array.isArray(seen)) state.owned = new Set(seen);
       if (typeof data.index === "number") {
         state.index = Math.max(0, Math.min(CARDS.length - 1, data.index));
       }
@@ -72,10 +71,7 @@
   }
 
   function save() {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ owned: [...state.owned], index: state.index })
-    );
+    Standard.saveState(DECK_ID, { index: state.index, seen: [...state.owned] });
   }
 
   function toast(msg) {
@@ -258,6 +254,8 @@
 
   function onPointerDown(e) {
     if (state.shuffleLock) return;
+    const origin = e.target instanceof Element ? e.target : null;
+    if (origin?.closest("button, a, pre, code, .detail-box, .code-box")) return;
     const t = e.touches ? e.touches[0] : e;
     startX = t.clientX;
     startY = t.clientY;
@@ -297,7 +295,7 @@
   window.addEventListener("mouseup", onPointerUp);
 
   cardEl.addEventListener("click", (e) => {
-    if (e.target.closest("a, button")) return;
+    if (e.target.closest("a, button, .detail-box, .code-box")) return;
     if (moved || Math.abs(state.swipeDx) > 10) return;
     flipCard();
   });
@@ -307,7 +305,9 @@
   btnRandom.addEventListener("click", doRandom);
 
   window.addEventListener("keydown", (e) => {
+    const target = e.target instanceof Element ? e.target : null;
     if (state.view !== "viewer") return;
+    if (target?.closest("button, a, input, textarea, select, pre, code")) return;
     if (e.key === "ArrowLeft") goPrev();
     if (e.key === "ArrowRight") goNext();
     if (e.key === " " || e.key === "Enter") {

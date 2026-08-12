@@ -4,14 +4,15 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
     <meta name="theme-color" content="#0b0f1a" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>Flink Card Deck · 학습 카드</title>
-    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/style.css?v=20260812-1" />
+    <link rel="stylesheet" href="../../shared/deck-standard.css?v=20260812-1" />
   </head>
-  <body>
+  <body data-deck="flink" data-deck-family="tcg">
     <div class="app">
       <header class="topbar">
         <div class="brand">
@@ -25,7 +26,7 @@
       <section class="view active" id="view-viewer">
         <div class="viewer">
           <div class="card-stage" id="card-stage">
-            <div class="card" id="card" data-rarity="N">
+            <div class="card" id="card" data-rarity="N" tabindex="0" aria-label="카드를 눌러 뒤집기">
               <div class="card-face front" id="face-front"></div>
               <div class="card-face back" id="face-back"></div>
             </div>
@@ -43,7 +44,7 @@
       <!-- Dex -->
       <section class="view" id="view-dex">
         <div class="dex-header">
-          <h2>도감</h2>
+          <h2>카드 목록</h2>
           <div class="rate" id="collect-rate"><b>0</b>/225 (0%)</div>
         </div>
         <div class="filters">
@@ -64,7 +65,7 @@
       <!-- Path -->
       <section class="view" id="view-path">
         <div class="dex-header">
-          <h2>학습 패스</h2>
+          <h2>학습 순서</h2>
           <div class="rate">문서 순서 학습</div>
         </div>
         <div class="path-scroll" id="path-scroll"></div>
@@ -77,22 +78,23 @@
         </button>
         <button type="button" class="tab-btn" data-view="dex">
           <span class="ico">📖</span>
-          도감
+          목록
         </button>
         <button type="button" class="tab-btn" data-view="path">
           <span class="ico">🗺️</span>
-          패스
+          순서
         </button>
       </nav>
     </div>
 
     <div class="toast" id="toast" role="status"></div>
 
-    <script src="js/visuals.js"></script>
-    <script src="js/cards.js"></script>
-    <script src="js/cards-extra.js"></script>
-    <script src="js/cards-advanced.js"></script>
-    <script src="js/cards-specialist.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/visuals.js?v=20260812-1"></script>
+    <script src="js/cards.js?v=20260812-1"></script>
+    <script src="js/cards-extra.js?v=20260812-1"></script>
+    <script src="js/cards-advanced.js?v=20260812-1"></script>
+    <script src="js/cards-specialist.js?v=20260812-1"></script>
+    <script src="../../shared/deck-standard.js?v=20260812-1"></script>
+    <script src="js/app.js?v=20260812-1"></script>
   </body>
 </html>
